@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Wealth Growth Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #0f172a; --accent: #10b981; --gold: #f59e0b; --bg: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+       .card { background: white; padding: 2.5rem; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.08); width: 100%; max-width: 420px; text-align: center; }
+        h1 { color: var(--primary); font-size: 1.6rem; margin-bottom: 0.5rem; font-weight: 800; }
+        p.subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 2rem; }
+       .input-group { margin-bottom: 1.5rem; text-align: left; }
+        label { display: block; margin-bottom: 0.6rem; color: #475569; font-size: 0.85rem; font-weight: 600; }
+        input { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1.2rem; box-sizing: border-box; transition: all 0.2s; }
+        input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
+       .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 2rem; }
+        button { padding: 12px 5px; border: 1.5px solid #e2e8f0; background: white; border-radius: 10px; cursor: pointer; transition: all 0.2s; font-size: 0.8rem; font-weight: 700; color: #64748b; }
+        button.active { background: var(--primary); color: white; border-color: var(--primary); }
+       .result-box { background: #f0fdf4; padding: 1.8rem; border-radius: 16px; border: 1px solid #dcfce7; }
+       .result-label { font-size: 0.85rem; color: #166534; margin-bottom: 0.5rem; font-weight: 600; }
+       .result-value { font-size: 2.4rem; font-weight: 800; color: var(--accent); letter-spacing: -1px; }
+       .cta-btn { margin-top: 2rem; display: block; width: 100%; padding: 16px; background: var(--gold); color: white; text-decoration: none; border-radius: 12px; font-weight: 800; transition: transform 0.2s; }
+       .cta-btn:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Wealth Simulator</h1>
+        <p class="subtitle">AI-powered 1-year investment projection</p>
+        
+        <div class="input-group">
+            <label>Initial Investment ($)</label>
+            <input type="number" id="amount" placeholder="e.g. 10000" oninput="calculate()">
+        </div>
+
+        <label style="text-align:left; display:block; margin-bottom:0.6rem;">Portfolio Risk Strategy</label>
+        <div class="btn-group">
+            <button onclick="setRate(0.05, this)" class="active">Conservative</button>
+            <button onclick="setRate(0.10, this)">Moderate</button>
+            <button onclick="setRate(0.15, this)">Aggressive</button>
+        </div>
+
+        <div class="result-box">
+            <div class="result-label">Projected Value in 12 Months</div>
+            <div class="result-value" id="result">$0.00</div>
+        </div>
+
+        <a href="https://whop.com/your-english-page" class="cta-btn">Unlock Full Strategy Guide →</a>
+    </div>
+
+    <script>
+        let currentRate = 0.05;
+        function setRate(rate, btn) {
+            currentRate = rate;
+            document.querySelectorAll('.btn-group button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            calculate();
+        }
+        function calculate() {
+            const amount = parseFloat(document.getElementById('amount').value) |
+
+| 0;
+            const total = amount * (1 + currentRate);
+            document.getElementById('result').innerText = '$' + total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        }
+    </script>
+</body>
+</html>
