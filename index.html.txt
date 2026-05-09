@@ -3,68 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Wealth Growth Simulator</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <title>AI Investment Strategist</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --primary: #0f172a; --accent: #10b981; --gold: #f59e0b; --bg: #f8fafc; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-       .card { background: white; padding: 2.5rem; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.08); width: 100%; max-width: 420px; text-align: center; }
-        h1 { color: var(--primary); font-size: 1.6rem; margin-bottom: 0.5rem; font-weight: 800; }
-        p.subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 2rem; }
-       .input-group { margin-bottom: 1.5rem; text-align: left; }
-        label { display: block; margin-bottom: 0.6rem; color: #475569; font-size: 0.85rem; font-weight: 600; }
-        input { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1.2rem; box-sizing: border-box; transition: all 0.2s; }
-        input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1); }
-       .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 2rem; }
-        button { padding: 12px 5px; border: 1.5px solid #e2e8f0; background: white; border-radius: 10px; cursor: pointer; transition: all 0.2s; font-size: 0.8rem; font-weight: 700; color: #64748b; }
-        button.active { background: var(--primary); color: white; border-color: var(--primary); }
-       .result-box { background: #f0fdf4; padding: 1.8rem; border-radius: 16px; border: 1px solid #dcfce7; }
-       .result-label { font-size: 0.85rem; color: #166534; margin-bottom: 0.5rem; font-weight: 600; }
-       .result-value { font-size: 2.4rem; font-weight: 800; color: var(--accent); letter-spacing: -1px; }
-       .cta-btn { margin-top: 2rem; display: block; width: 100%; padding: 16px; background: var(--gold); color: white; text-decoration: none; border-radius: 12px; font-weight: 800; transition: transform 0.2s; }
-       .cta-btn:hover { transform: translateY(-2px); }
+        :root { --primary: #0f172a; --accent: #10b981; --bg: #f1f5f9; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--primary); margin: 0; padding: 20px; display: flex; justify-content: center; }
+       .dashboard { background: white; padding: 2rem; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.05); width: 100%; max-width: 800px; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        @media (max-width: 600px) {.dashboard { grid-template-columns: 1fr; } }
+        h1 { grid-column: 1 / -1; margin-bottom: 1rem; font-size: 1.5rem; text-align: center; }
+       .input-section { display: flex; flex-direction: column; gap: 1.5rem; }
+        input { padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1rem; }
+       .btn-group { display: flex; gap: 8px; }
+        button { flex: 1; padding: 10px; border: 1.5px solid #e2e8f0; background: white; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 0.8rem; }
+        button.active { background: var(--primary); color: white; }
+       .strategy-box { background: #f8fafc; padding: 1.5rem; border-radius: 16px; border: 1px solid #e2e8f0; }
+       .ticker { background: #fff; padding: 4px 8px; border-radius: 4px; font-weight: bold; border: 1px solid #ddd; }
+       .disclaimer { font-size: 0.7rem; color: #94a3b8; margin-top: 2rem; grid-column: 1 / -1; text-align: center; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Wealth Simulator</h1>
-        <p class="subtitle">AI-powered 1-year investment projection</p>
+    <div class="dashboard">
+        <h1>AI Personal Portfolio Strategist</h1>
         
-        <div class="input-group">
-            <label>Initial Investment ($)</label>
-            <input type="number" id="amount" placeholder="e.g. 10000" oninput="calculate()">
+        <div class="input-section">
+            <div>
+                <label style="display:block; margin-bottom:8px; font-weight:600;">Investment Amount ($)</label>
+                <input type="number" id="amount" placeholder="e.g. 10000" oninput="updateStrategy()">
+            </div>
+            <div>
+                <label style="display:block; margin-bottom:8px; font-weight:600;">Risk Profile</label>
+                <div class="btn-group">
+                    <button onclick="setProfile('conservative', this)" class="active">Conservative</button>
+                    <button onclick="setProfile('moderate', this)">Moderate</button>
+                    <button onclick="setProfile('aggressive', this)">Aggressive</button>
+                </div>
+            </div>
+            <div class="strategy-box" id="strategy-text">
+                <strong>Suggested Allocation:</strong><br>
+                Enter an amount to see your AI-tailored plan.
+            </div>
         </div>
 
-        <label style="text-align:left; display:block; margin-bottom:0.6rem;">Portfolio Risk Strategy</label>
-        <div class="btn-group">
-            <button onclick="setRate(0.05, this)" class="active">Conservative</button>
-            <button onclick="setRate(0.10, this)">Moderate</button>
-            <button onclick="setRate(0.15, this)">Aggressive</button>
+        <div style="position: relative; height:300px; width:100%">
+            <canvas id="allocationChart"></canvas>
         </div>
 
-        <div class="result-box">
-            <div class="result-label">Projected Value in 12 Months</div>
-            <div class="result-value" id="result">$0.00</div>
+        <div class="disclaimer">
+            *This is a simulation based on 2026 market projections. Not financial advice.
         </div>
-
-        <a href="https://whop.com/your-english-page" class="cta-btn">Unlock Full Strategy Guide →</a>
     </div>
 
     <script>
-        let currentRate = 0.05;
-        function setRate(rate, btn) {
-            currentRate = rate;
-            document.querySelectorAll('.btn-group button').forEach(b => b.classList.remove('active'));
+        let myChart;
+        let currentProfile = 'conservative';
+        const profiles = {
+            conservative: { rates: , labels:, color: ['#10b981', '#3b82f6', '#94a3b8'], text: "Focus on wealth preservation. 50% in Total Bond Market <span class='ticker'>BND</span>." },
+            moderate: { rates: , labels:, color: ['#10b981', '#3b82f6', '#94a3b8'], text: "Balanced growth. 60% in S&P 500 Index <span class='ticker'>VOO</span>." },
+            aggressive: { rates: , labels:, color: ['#f59e0b', '#3b82f6', '#10b981'], text: "High growth potential. 90% in Nasdaq-100 <span class='ticker'>QQQ</span>." }
+        };
+
+        function setProfile(p, btn) {
+            currentProfile = p;
+            document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            calculate();
+            updateStrategy();
         }
-        function calculate() {
+
+        function updateStrategy() {
             const amount = parseFloat(document.getElementById('amount').value) |
 
 | 0;
-            const total = amount * (1 + currentRate);
-            document.getElementById('result').innerText = '$' + total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            const p = profiles[currentProfile];
+            const values = p.rates.map(r => (amount * r / 100).toFixed(2));
+            
+            document.getElementById('strategy-text').innerHTML = `
+                <strong>Plan for $${amount.toLocaleString()}:</strong><br>
+                ${p.text}<br><br>
+                • $${values} to ${p.labels}<br>
+                • $${values[1]} to ${p.labels[1]}<br>
+                • $${values[2]} to ${p.labels[2]}
+            `;
+
+            if (myChart) myChart.destroy();
+            const ctx = document.getElementById('allocationChart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: p.labels,
+                    datasets:
+                },
+                options: { cutout: '70%', plugins: { legend: { position: 'bottom' } } }
+            });
         }
+        updateStrategy();
     </script>
 </body>
 </html>
