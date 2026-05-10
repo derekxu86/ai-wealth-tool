@@ -24,7 +24,7 @@ module.exports = async function handler(req, res) {
     const payload = await callOpenAIJson({
       name: 'trading_signal',
       system: 'You are an AI trading signal analyst. Return JSON only. This is educational market analysis, not financial advice. Use Buy, Hold, or Sell only.',
-      user: `Analyze this ticker and produce one actionable signal. Data: ${JSON.stringify(body)}. Keep reason under 32 words, in the same language as lang when possible. Focus on the top 2 signal drivers only.`,
+      user: `Analyze this ticker and produce one actionable signal. Data: ${JSON.stringify(body)}. Write the reason in the same language as lang when possible. Make it a useful short paragraph: include 3-4 concrete drivers, explain why the signal is Buy/Hold/Sell, mention one key risk or confirmation point, and avoid generic disclaimers. Target 70-100 English words or 90-130 Chinese characters.`,
       schema: {
         type: 'object',
         additionalProperties: false,

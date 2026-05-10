@@ -63,6 +63,43 @@ async function fetchFinnhubQuote(symbol) {
   return { c: price, dp: Number.isFinite(dp) ? dp : 0, source: 'Finnhub Quote', symbol };
 }
 
+function yahooSymbol(symbol) {
+  const map = {
+    'BINANCE:BTCUSDT': 'BTC-USD',
+    'BTC/USD': 'BTC-USD'
+  };
+  return map[symbol] || symbol;
+}
+
+async function fetchYahooQuote(symbol) {
+  if (!symbol) return null;
+  const url = new URL(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol(symbol))}`);
+  url.searchParams.set('range', '1d');
+  url.searchParams.set('interval', '1m');
+  const response = await fetch(url, {
+    headers: {
+      'user-agent': 'Mozilla/5.0'
+    }
+  });
+  if (!response.ok) return null;
+  const data = await response.json();
+  const result = data?.chart?.result?.[0];
+  const meta = result?.meta || {};
+  const price = Number(meta.regularMarketPrice);
+  const previous = Number(meta.previousClose);
+  if (!Number.isFinite(price) || price <= 0) return null;
+  const dp = Number.isFinite(previous) && previous > 0 ? ((price - previous) / previous) * 100 : 0;
+  const volumes = result?.indicators?.quote?.[0]?.volume || [];
+  const volume = volumes.filter(v => Number.isFinite(Number(v))).pop() || null;
+  return {
+    c: price,
+    dp: Number.isFinite(dp) ? dp : 0,
+    volume,
+    source: 'Yahoo Finance',
+    symbol
+  };
+}
+
 async function readJson(req) {
   if (req.body && typeof req.body === 'object') return req.body;
   const chunks = [];
@@ -105,6 +142,7 @@ module.exports = {
   fetchFinnhub,
   fetchFinnhubQuote,
   fetchTwelveQuote,
+  fetchYahooQuote,
   getSymbol,
   readJson,
   sendJson

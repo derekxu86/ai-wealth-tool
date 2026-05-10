@@ -34,33 +34,37 @@
         @keyframes scroll-v { 0% { transform: translateY(0); } 100% { transform: translateY(-50%); } }
         .news-item { height: 42px; display: flex; flex-direction: column; justify-content: center; cursor: pointer; transition: color 0.2s; }
         .news-item:hover { color: #60a5fa; }
+        @media (max-width: 640px) {
+            .modal-content { max-height: 92vh; border-radius: 18px; }
+            #search-modal-body { padding: 1rem; }
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-4">
+<body class="min-h-screen flex flex-col items-center justify-start p-2 pt-24 sm:p-4 sm:pt-20 lg:pt-4">
 
-    <div class="fixed top-4 w-full max-w-5xl flex justify-between items-center z-40 px-4">
+    <div class="fixed top-2 sm:top-4 w-full max-w-5xl flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 z-40 px-2 sm:px-4">
         <button onclick="toggleLang()" class="flex items-center gap-2 bg-[#18181b] border border-zinc-800 px-3 py-1.5 rounded-full text-xs font-bold text-zinc-400 hover:text-white transition-colors shadow-lg">
             <i class="ph ph-translate text-sm"></i> <span id="lang-toggle-text">EN / 中文</span>
         </button>
 
-        <div class="flex items-center gap-4">
-            <div class="relative w-72">
+        <div class="flex items-center gap-2 sm:gap-4">
+            <div class="relative flex-1 sm:flex-none sm:w-72">
                 <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"></i>
                 <input type="text" id="global-search" data-i18n-placeholder="searchPlaceholder" placeholder="US, .AX, .HK, .SZ, .SS..."
                     class="w-full pl-9 pr-4 py-2 bg-[#111113]/80 backdrop-blur border border-zinc-700 rounded-full text-sm text-white focus:outline-none focus:border-blue-500 transition-colors shadow-lg">
                 <ul id="search-dropdown" class="absolute top-full left-0 w-full mt-2 bg-[#18181b] border border-zinc-700 rounded-xl shadow-2xl overflow-hidden hidden max-h-64 overflow-y-auto no-scrollbar z-50"></ul>
             </div>
-            <div class="flex items-center gap-2 bg-[#18181b] px-3 py-1.5 rounded-full border border-zinc-800 shadow-lg">
+            <div class="hidden sm:flex items-center gap-2 bg-[#18181b] px-3 py-1.5 rounded-full border border-zinc-800 shadow-lg">
                 <div class="w-2 h-2 bg-green-500 rounded-full pulse-green"></div>
                 <span class="text-[10px] font-bold text-zinc-400 tracking-widest uppercase" data-i18n="liveFeed">Live Feed</span>
             </div>
         </div>
     </div>
 
-    <div class="max-w-5xl w-full bg-[#111113] rounded-3xl shadow-2xl border border-zinc-800/50 overflow-hidden flex flex-col md:flex-row relative z-10 mb-6 mt-12">
-        <div class="p-8 md:w-5/12 bg-[#18181b] border-r border-zinc-800 flex flex-col">
-            <div class="mb-10">
-                <h1 class="text-3xl font-black tracking-tight text-white mb-2 flex items-center gap-2">
+    <div class="max-w-5xl w-full bg-[#111113] rounded-2xl sm:rounded-3xl shadow-2xl border border-zinc-800/50 overflow-hidden flex flex-col md:flex-row relative z-10 mb-4 sm:mb-6">
+        <div class="p-5 sm:p-8 md:w-5/12 bg-[#18181b] border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col">
+            <div class="mb-6 sm:mb-10">
+                <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white mb-2 flex items-center gap-2">
                     <i class="ph ph-cpu text-blue-500"></i> <span data-i18n="title">AI 理财策略师</span>
                 </h1>
                 <p class="text-sm text-zinc-400 font-medium" data-i18n="subtitle">Global Macro Allocation Engine</p>
@@ -88,13 +92,13 @@
             </div>
         </div>
 
-        <div class="p-8 md:w-7/12 flex flex-col bg-gradient-to-br from-[#09090b] to-[#111113]">
+        <div class="p-5 sm:p-8 md:w-7/12 flex flex-col bg-gradient-to-br from-[#09090b] to-[#111113]">
             <div class="flex justify-between items-end mb-6">
                 <h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest" data-i18n="portStruct">Structure</h2>
                 <span class="text-[10px] text-zinc-600 flex items-center gap-1 font-bold"><i class="ph ph-arrows-clockwise"></i> <span data-i18n="updates">Auto-sync</span></span>
             </div>
-            <div class="flex flex-col sm:flex-row items-center gap-8 mb-8 flex-1">
-                <div class="w-48 h-48 relative flex-shrink-0 cursor-pointer transition-transform hover:scale-105" id="chart-container">
+            <div class="flex flex-col sm:flex-row items-center gap-5 sm:gap-8 mb-6 sm:mb-8 flex-1">
+                <div class="w-44 h-44 sm:w-48 sm:h-48 relative flex-shrink-0 cursor-pointer transition-transform hover:scale-105" id="chart-container">
                     <canvas id="allocation-chart"></canvas>
                     <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                         <span class="text-[10px] font-bold text-zinc-500 tracking-widest uppercase" data-i18n="netAsset">AUM</span>
@@ -104,13 +108,13 @@
                 <div class="flex-1 w-full max-h-64 overflow-y-auto pr-2 space-y-2 no-scrollbar" id="asset-list"></div>
             </div>
             <div id="dynamic-strategy-note" class="hidden mb-4 bg-blue-500/10 border border-blue-500/20 rounded-xl px-4 py-3 text-xs text-blue-200 leading-relaxed"></div>
-            <div class="mt-auto border-t border-zinc-800 pt-6 grid grid-cols-2 gap-4">
-                <div class="bg-[#18181b] rounded-2xl p-4 border border-zinc-800/50">
+            <div class="mt-auto border-t border-zinc-800 pt-5 sm:pt-6 grid grid-cols-2 gap-3 sm:gap-4">
+                <div class="bg-[#18181b] rounded-2xl p-3 sm:p-4 border border-zinc-800/50">
                     <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1" data-i18n="proj1y">1Y Proj.</p>
                     <p class="text-xl font-black text-white mb-1" id="forecast-1y">--</p>
                     <p class="text-xs font-bold text-emerald-400 flex items-center gap-1"><i class="ph ph-trend-up"></i> <span id="rate-1y">--</span></p>
                 </div>
-                <div class="bg-[#18181b] rounded-2xl p-4 border border-zinc-800/50">
+                <div class="bg-[#18181b] rounded-2xl p-3 sm:p-4 border border-zinc-800/50">
                     <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1" data-i18n="proj5y">5Y Proj.</p>
                     <p class="text-xl font-black text-white mb-1" id="forecast-5y">--</p>
                     <p class="text-xs font-bold text-emerald-400 flex items-center gap-1"><i class="ph ph-trend-up"></i> <span id="return-5y">--</span></p>
@@ -119,21 +123,21 @@
         </div>
     </div>
 
-    <div class="max-w-5xl w-full bg-[#18181b] border border-zinc-800 p-4 rounded-2xl mb-4">
+    <div class="max-w-5xl w-full bg-[#18181b] border border-zinc-800 p-3 sm:p-4 rounded-2xl mb-4">
         <div class="flex flex-col gap-3 md:flex-row md:items-center">
             <div class="flex-1">
                 <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-2">AI Allocation</p>
                 <input id="allocation-prompt" data-i18n-value="allocationPrompt" value="我有2万块，风险偏高，想投 AI 和能源"
                     class="w-full bg-[#09090b] border border-zinc-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
             </div>
-            <button id="ai-allocation-btn" class="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-400 text-white px-5 py-3 rounded-xl text-sm font-black mt-6 md:mt-0">
+            <button id="ai-allocation-btn" class="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-400 text-white px-5 py-3 rounded-xl text-sm font-black md:mt-0">
                 <i class="ph ph-sparkle"></i> Ask AI
             </button>
         </div>
         <div id="ai-allocation-output" class="hidden mt-4 grid gap-3 md:grid-cols-3"></div>
     </div>
 
-    <div class="max-w-5xl w-full bg-[#18181b] border border-zinc-800 p-4 rounded-2xl flex items-start gap-4">
+    <div class="max-w-5xl w-full bg-[#18181b] border border-zinc-800 p-3 sm:p-4 rounded-2xl flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
         <span class="flex-shrink-0 text-[10px] font-black bg-blue-500/10 text-blue-400 px-2 py-1 rounded border border-blue-500/20 uppercase tracking-widest mt-0.5" data-i18n="marketNews">Live News</span>
         <div class="news-v-container text-sm text-zinc-400 font-medium">
             <div id="news-ticker-content" class="news-v-content">
@@ -142,10 +146,10 @@
         </div>
     </div>
 
-    <div class="max-w-5xl w-full mt-4 bg-[#18181b] border border-zinc-800 px-4 py-3 rounded-2xl">
-        <div class="flex items-center gap-3">
+    <div class="max-w-5xl w-full mt-4 bg-[#18181b] border border-zinc-800 px-3 sm:px-4 py-3 rounded-2xl">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
             <span class="flex-shrink-0 text-[10px] font-black bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20 uppercase tracking-widest">Market Pulse</span>
-            <div id="market-pulse-content" class="grid flex-1 grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 text-xs">
+            <div id="market-pulse-content" class="flex flex-1 gap-2 text-xs overflow-x-auto no-scrollbar sm:grid sm:grid-cols-4 lg:grid-cols-7">
                 <div class="text-zinc-500 font-bold">Loading...</div>
             </div>
         </div>
@@ -242,6 +246,7 @@
         const SEARCH_API_ENDPOINT = '/api/search';
         const NEWS_API_ENDPOINT = '/api/news';
         const MARKET_SCAN_ENDPOINT = '/api/market-scan';
+        const LOCAL_API_BASE = ['localhost', '127.0.0.1'].includes(location.hostname) ? 'http://127.0.0.1:8780' : '';
         const apiCache = {}; 
         let currentLang = 'en'; // 默认英文
         let newsDataStore = []; 
@@ -430,13 +435,30 @@
         }
         function toggleLang() { currentLang = currentLang === 'en' ? 'zh' : 'en'; renderLang(); updateDashboard(); }
 
+        function apiCandidates(endpoint) {
+            return LOCAL_API_BASE ? [endpoint, `${LOCAL_API_BASE}${endpoint}`] : [endpoint];
+        }
+
+        async function fetchApiJson(endpoint, options) {
+            for (const url of apiCandidates(endpoint)) {
+                try {
+                    const res = await fetch(url, options);
+                    const data = await res.json().catch(() => null);
+                    if (res.ok) return data;
+                } catch {}
+            }
+            return null;
+        }
+
+        function withQuery(endpoint, params) {
+            const query = new URLSearchParams(params).toString();
+            return `${endpoint}${query ? `?${query}` : ''}`;
+        }
+
         async function fetchTwelveQuote(symbol) {
             try {
-                const url = new URL(QUOTE_API_ENDPOINT);
-                url.searchParams.set('symbol', symbol);
-                const res = await fetch(url.toString());
-                if (!res.ok) return null;
-                const data = await res.json();
+                const data = await fetchApiJson(withQuery(QUOTE_API_ENDPOINT, { symbol }));
+                if (!data) return null;
                 const price = Number(data.c);
                 const dp = data.dp !== undefined ? Number(data.dp) : 0;
                 return Number.isFinite(price) ? { c: price, dp: Number.isFinite(dp) ? dp : 0, source: data.source || 'Twelve Data' } : null;
@@ -449,11 +471,8 @@
         async function fetchFullStockData(symbol) {
             if (apiCache[symbol] && (Date.now() - apiCache[symbol].time < 300000)) return apiCache[symbol].data;
             try {
-                const url = new URL(STOCK_DATA_ENDPOINT, window.location.origin);
-                url.searchParams.set('symbol', symbol);
-                const res = await fetch(url.toString());
-                if (!res.ok) return null;
-                const data = await res.json();
+                const data = await fetchApiJson(withQuery(STOCK_DATA_ENDPOINT, { symbol }));
+                if (!data) return null;
                 apiCache[symbol] = { time: Date.now(), data };
                 return data;
             } catch {
@@ -584,13 +603,12 @@
         async function fetchAITradingSignal(payload) {
             for (const endpoint of OPENAI_SIGNAL_ENDPOINTS) {
                 try {
-                    const res = await fetch(endpoint, {
+                    const data = await fetchApiJson(endpoint, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
-                    const data = await res.json().catch(() => ({}));
-                    if (res.ok && data.signal) return data;
+                    if (data && data.signal) return data;
                 } catch {}
             }
             return null;
@@ -641,19 +659,12 @@
             return short.length > 260 ? `${short.slice(0, 257).trim()}...` : short;
         }
 
-        async function callJsonEndpoint(url, payload) {
-            try {
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) return { error: data.error || 'endpoint unavailable' };
-                return data;
-            } catch {
-                return null;
-            }
+        async function callJsonEndpoint(endpoint, payload) {
+            return await fetchApiJson(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }) || { error: 'endpoint unavailable' };
         }
 
         const marketPulseItems = [
@@ -688,7 +699,7 @@
                 const price = q ? (q.c >= 100 ? q.c.toFixed(2) : q.c.toFixed(4)) : 'No data';
                 const change = q ? `${up ? '+' : ''}${Number(q.dp).toFixed(2)}%` : '--';
                 return `
-                    <div title="${item.hint}" class="bg-[#09090b] border border-zinc-800 rounded-lg px-2 py-2 hover:border-emerald-500/40 transition-colors">
+                    <div title="${item.hint}" class="min-w-[116px] sm:min-w-0 bg-[#09090b] border border-zinc-800 rounded-lg px-2 py-2 hover:border-emerald-500/40 transition-colors">
                         <div class="flex items-center justify-between gap-2">
                             <span class="font-black text-zinc-300 truncate">${item.label}</span>
                             <span class="font-black ${q ? (up ? 'text-emerald-400' : 'text-red-400') : 'text-blue-400'}">${change}</span>
@@ -707,9 +718,8 @@
 
         async function fetchMarketScan() {
             try {
-                const res = await fetch(MARKET_SCAN_ENDPOINT);
-                if (!res.ok) throw new Error('scan unavailable');
-                latestMarketScan = await res.json();
+                latestMarketScan = await fetchApiJson(MARKET_SCAN_ENDPOINT);
+                if (!latestMarketScan) throw new Error('scan unavailable');
             } catch {
                 latestMarketScan = null;
             }
@@ -905,8 +915,8 @@
             
             searchTimeout = setTimeout(async () => {
                 try {
-                    const res = await fetch(`${SEARCH_API_ENDPOINT}?q=${encodeURIComponent(query)}`);
-                    const data = await res.json();
+                    const data = await fetchApiJson(withQuery(SEARCH_API_ENDPOINT, { q: query }));
+                    if (!data) return;
                     const filtered = (data.result || []).slice(0, 8); 
                     
                     renderSearchResults(filtered, query, false);
@@ -1051,8 +1061,8 @@
         // --- 新闻与AI增强摘要 ---
         async function fetchMarketNews() {
             try {
-                const res = await fetch(NEWS_API_ENDPOINT);
-                const news = await res.json();
+                const news = await fetchApiJson(NEWS_API_ENDPOINT);
+                if (!Array.isArray(news)) return;
                 newsDataStore = news
                     .filter(n => n && n.headline && n.headline.trim() && n.headline.trim() !== '--')
                     .slice(0, 15); 
@@ -1073,7 +1083,7 @@
 
         async function fetchAINewsAnalysis(newsItem) {
             try {
-                const res = await fetch(OPENAI_NEWS_ENDPOINT, {
+                const data = await fetchApiJson(OPENAI_NEWS_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1084,8 +1094,7 @@
                         lang: currentLang
                     })
                 });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok || !data.analysis) throw new Error(data.error || 'AI news analysis unavailable');
+                if (!data || !data.analysis) throw new Error('AI news analysis unavailable');
                 return data;
             } catch {
                 return null;
@@ -1096,7 +1105,7 @@
             const n = newsDataStore[idx];
             if(!n) return;
             document.getElementById('news-title').textContent = n.headline;
-            document.getElementById('news-summary').innerHTML = `<span class="text-blue-400 font-bold"><i class="ph ph-circle-notch animate-spin mr-1"></i>${currentLang === 'zh' ? 'OpenAI 正在分析这条新闻...' : 'OpenAI is analyzing this headline...'}</span>`;
+            document.getElementById('news-summary').innerHTML = `<span class="text-blue-400 font-bold"><i class="ph ph-circle-notch animate-spin mr-1"></i>${currentLang === 'zh' ? 'AI 正在分析这条新闻...' : 'AI is analyzing this headline...'}</span>`;
             
             // AI 提取标签
             let tagsHtml = '';
@@ -1259,7 +1268,7 @@
             });
             const warning = remote?.error ? `
                 <div class="md:col-span-3 p-3 bg-orange-500/10 border border-orange-500/20 rounded-xl text-xs font-bold text-orange-300">
-                    OpenAI allocation is connected, but the API key currently has no usable quota/billing. Showing a local example allocation.
+                    AI allocation is connected, but the service currently has no usable quota/billing. Showing a local example allocation.
                 </div>
             ` : '';
             const cards = normalizeAllocationCards(remote?.allocations, prompt);
