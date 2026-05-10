@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/ai-portfolio-terminal-v2.html"
+    }
+  ]
+}
