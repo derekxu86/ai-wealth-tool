@@ -37,10 +37,13 @@
         @media (max-width: 640px) {
             .modal-content { max-height: 92vh; border-radius: 18px; }
             #search-modal-body { padding: 1rem; }
+            .news-v-container { height: 56px; }
+            .news-v-content { animation-duration: 38s; }
+            .news-item { height: 56px; line-height: 1.25; }
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-start p-2 pt-24 sm:p-4 sm:pt-20 lg:pt-4">
+<body class="min-h-screen flex flex-col items-center justify-start p-2 pt-24 sm:p-4 sm:pt-28 lg:pt-28">
 
     <div class="fixed top-2 sm:top-4 w-full max-w-5xl flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 z-40 px-2 sm:px-4">
         <button onclick="toggleLang()" class="flex items-center gap-2 bg-[#18181b] border border-zinc-800 px-3 py-1.5 rounded-full text-xs font-bold text-zinc-400 hover:text-white transition-colors shadow-lg">
@@ -137,9 +140,9 @@
         <div id="ai-allocation-output" class="hidden mt-4 grid gap-3 md:grid-cols-3"></div>
     </div>
 
-    <div class="max-w-5xl w-full bg-[#18181b] border border-zinc-800 p-3 sm:p-4 rounded-2xl flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
-        <span class="flex-shrink-0 text-[10px] font-black bg-blue-500/10 text-blue-400 px-2 py-1 rounded border border-blue-500/20 uppercase tracking-widest mt-0.5" data-i18n="marketNews">Live News</span>
-        <div class="news-v-container text-sm text-zinc-400 font-medium">
+    <div class="max-w-5xl w-full bg-[#18181b] border border-zinc-800 p-3 sm:p-4 rounded-2xl flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4">
+        <span class="self-start flex-shrink-0 text-[10px] font-black bg-blue-500/10 text-blue-400 px-2 py-1 rounded border border-blue-500/20 uppercase tracking-widest mt-0.5" data-i18n="marketNews">Live News</span>
+        <div class="news-v-container text-xs sm:text-sm text-zinc-400 font-medium">
             <div id="news-ticker-content" class="news-v-content">
                 <div class="news-item">Fetching market pulse...</div>
             </div>
