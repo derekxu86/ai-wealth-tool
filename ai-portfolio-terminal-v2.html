@@ -1068,17 +1068,12 @@
             const renderRows = (rows, emptyText, mapper) => rows.length
                 ? rows.slice(0, 3).map(mapper).join('')
                 : `<p class="text-xs text-zinc-500 font-bold leading-relaxed">${emptyText}</p>`;
-            const localReport = localInvestmentCommittee({ symbol, name, market: 'A-share', news, reports });
-            const remoteReport = await fetchInvestmentCommittee({ symbol, name, market: 'A-share', news, reports });
-            const premiumPanel = isPremiumMember()
-                ? renderInvestmentCommitteeCard(remoteReport || localReport)
-                : `<div class="md:col-span-2">${premiumGateHtml('analysis')}</div>`;
             box.innerHTML = `
                 <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
                     <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '相关新闻' : 'News'}</p>
                     ${renderRows(news, currentLang === 'zh' ? '公开新闻源暂未返回，先参考日线图和题材热度。' : 'No public news returned. Use chart and theme heat first.', item => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(item.title)}</p>`)}
                 </div>
-                ${premiumPanel}
+                ${renderInvestmentCommitteeLauncher(symbol, name, 'A-share')}
             `;
         }
 
@@ -1208,6 +1203,45 @@
             `;
         }
 
+        function renderInvestmentCommitteeLauncher(symbol, name, market) {
+            if (!isPremiumMember()) return `<div class="md:col-span-2">${premiumGateHtml('analysis')}</div>`;
+            return `
+                <div id="investment-committee-box" class="rounded-xl border border-zinc-800 bg-[#050506] p-4 md:col-span-2">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div>
+                            <p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest">${currentLang === 'zh' ? 'AI 投研委员会' : 'AI Investment Committee'}</p>
+                            <p class="mt-1 text-xs text-zinc-500 font-bold leading-relaxed">${currentLang === 'zh' ? '点击后再调用高级投研分析，避免打开个股时加载过慢。' : 'Load advanced research on demand so the stock profile opens faster.'}</p>
+                        </div>
+                        <button class="shrink-0 rounded-xl border border-blue-500/40 bg-blue-500/10 px-4 py-2 text-xs font-black text-blue-300 hover:bg-blue-500/20 transition-colors"
+                            onclick="loadInvestmentCommitteePanel('${escapeAttr(symbol)}', '${escapeAttr(name)}', '${escapeAttr(market)}')">
+                            ${currentLang === 'zh' ? '查看 AI 投研' : 'View AI Research'}
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.loadInvestmentCommitteePanel = async function(symbol, name, market) {
+            const box = document.getElementById('investment-committee-box');
+            if (!box) return;
+            if (!isPremiumMember()) {
+                box.innerHTML = premiumGateHtml('analysis');
+                return;
+            }
+            box.innerHTML = `
+                <div class="rounded-xl border border-zinc-800 bg-[#050506] p-4">
+                    <p class="text-sm text-zinc-400 font-bold"><i class="ph ph-circle-notch animate-spin text-blue-400 mr-2"></i>${currentLang === 'zh' ? '正在生成 AI 投研委员会分析...' : 'Generating AI investment committee analysis...'}</p>
+                </div>
+            `;
+            const isA = market === 'A-share' || isAshareSymbol(symbol);
+            const [news, reports] = isA
+                ? await Promise.all([fetchAshareNews(name, symbol), fetchAshareReports(symbol)])
+                : [await fetchCompanyNews(symbol), []];
+            const localReport = localInvestmentCommittee({ symbol, name, market, news, reports });
+            const remoteReport = await fetchInvestmentCommittee({ symbol, name, market, news, reports });
+            box.outerHTML = renderInvestmentCommitteeCard(remoteReport || localReport);
+        };
+
         function renderGlobalInfoPanel(symbol, name) {
             if (isAshareSymbol(symbol)) return '';
             setTimeout(() => hydrateGlobalInfo(symbol, name), 50);
@@ -1246,17 +1280,12 @@
             const renderNews = news.length
                 ? news.slice(0, 3).map(n => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(n.headline)}</p>`).join('')
                 : `<p class="text-xs text-zinc-500 font-bold leading-relaxed">${currentLang === 'zh' ? '个股新闻源暂未返回。' : 'No company news returned.'}</p>`;
-            const localReport = localInvestmentCommittee({ symbol, name, market: 'Global', news });
-            const remoteReport = await fetchInvestmentCommittee({ symbol, name, market: 'Global', news });
-            const premiumPanel = isPremiumMember()
-                ? renderInvestmentCommitteeCard(remoteReport || localReport)
-                : `<div class="md:col-span-2">${premiumGateHtml('analysis')}</div>`;
             box.innerHTML = `
                 <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
                     <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '相关新闻' : 'Company News'}</p>
                     ${renderNews}
                 </div>
-                ${premiumPanel}
+                ${renderInvestmentCommitteeLauncher(symbol, name, 'Global')}
             `;
         }
 
@@ -2342,6 +2371,56 @@
             return dynamicStrategy(strategiesData[currentRisk]);
         }
 
+        function isLikelyEtf(symbol) {
+            const s = String(symbol || '').toUpperCase();
+            if (/^(SPY|QQQ|VT|VEA|IEFA|SMH|XLU|BIL|BND|SHY|GLD|USO|UUP|KWEB|MCHI|FXI|ASHR|ICLN|LIT|ARKG|SCHD|NOBL|PAVE|GRID)$/.test(s)) return true;
+            return /^(510|511|512|513|515|516|588)\d{3}\.(SS|SZ)$/.test(s);
+        }
+
+        function nonEtfBackups(label, prompt) {
+            const text = `${label || ''} ${prompt || ''}`.toLowerCase();
+            if (/ai|semiconductor|chip|tech|人工智能|算力|半导体|芯片/.test(text)) {
+                return [
+                    { symbol: 'NVDA', name: 'NVIDIA Corp' },
+                    { symbol: 'AVGO', name: 'Broadcom' },
+                    { symbol: 'VRT', name: 'Vertiv Holdings' }
+                ];
+            }
+            if (/energy|power|utility|infrastructure|能源|电力|基建/.test(text)) {
+                return [
+                    { symbol: 'VRT', name: 'Vertiv Holdings' },
+                    { symbol: 'NEE', name: 'NextEra Energy' },
+                    { symbol: 'CCJ', name: 'Cameco Corp' }
+                ];
+            }
+            if (/cloud|software|saas|云|软件/.test(text)) {
+                return [
+                    { symbol: 'MSFT', name: 'Microsoft Corp' },
+                    { symbol: 'NET', name: 'Cloudflare' },
+                    { symbol: 'DDOG', name: 'Datadog' }
+                ];
+            }
+            if (/biotech|gene|health|医药|生物/.test(text)) {
+                return [
+                    { symbol: 'RXRX', name: 'Recursion Pharma' },
+                    { symbol: 'CRSP', name: 'CRISPR Therapeutics' },
+                    { symbol: 'BEAM', name: 'Beam Therapeutics' }
+                ];
+            }
+            return [
+                { symbol: 'MSFT', name: 'Microsoft Corp' },
+                { symbol: 'NVDA', name: 'NVIDIA Corp' },
+                { symbol: 'AVGO', name: 'Broadcom' }
+            ];
+        }
+
+        function ensureNotAllEtfHoldings(holdings, label, prompt) {
+            const clean = (holdings || []).filter(h => h?.symbol);
+            if (!clean.length || clean.some(h => !isLikelyEtf(h.symbol))) return clean;
+            const backups = nonEtfBackups(label, prompt).filter(h => !clean.some(x => String(x.symbol).toUpperCase() === h.symbol));
+            return [...backups.slice(0, 2), clean[0]].slice(0, 3);
+        }
+
         function strategyFromAllocationCards(cards, prompt) {
             const colors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'];
             const total = cards.reduce((sum, card) => sum + (Number(card.weight) || 0), 0) || 100;
@@ -2358,7 +2437,7 @@
                         const rawHoldings = card.holdings?.length ? card.holdings : inferHoldings(card.label, prompt);
                         const holdings = currentMarketMode === 'ashare' && currentLang === 'zh'
                             ? enforceAshareHoldings(rawHoldings, card.label, prompt)
-                            : rawHoldings;
+                            : ensureNotAllEtfHoldings(rawHoldings, card.label, prompt);
                         return {
                             id: card.label,
                             w: (Number(card.weight) || 0) / total,
@@ -2658,7 +2737,8 @@
             const cleaned = (holdings || [])
                 .filter(item => isAshareSymbol(item.symbol))
                 .map(item => ({ symbol: ashareSymbolFromCode(item.symbol), name: item.name || item.symbol }));
-            if (cleaned.length >= 2) return cleaned;
+            if (cleaned.length >= 2 && cleaned.some(item => !isLikelyEtf(item.symbol))) return cleaned;
+            if (cleaned.length >= 2) return inferAshareHoldings(label, prompt);
             return inferAshareHoldings(label, prompt);
         }
 

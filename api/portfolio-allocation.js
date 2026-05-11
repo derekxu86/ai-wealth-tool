@@ -17,8 +17,8 @@ module.exports = async function handler(req, res) {
     }[currentRisk] || 'Moderate core: balance growth and defense.';
 
     const marketInstruction = marketMode === 'ashare'
-      ? 'Market mode is China A-shares. Every investable ticker must be an A-share or China onshore ETF ending in .SS or .SZ. Do not return US, HK, ASX, crypto, or global ETF tickers in allocations.'
-      : 'Market mode is global. You may use global ETFs and listed equities, but do not force Australia/ASX exposure unless the user explicitly asks for it.';
+      ? 'Market mode is China A-shares. Every investable ticker must be an A-share or China onshore ETF ending in .SS or .SZ. Do not return US, HK, ASX, crypto, or global ETF tickers in allocations. Do not make every holding an ETF; each growth or thematic sleeve should include individual A-share companies when appropriate.'
+      : 'Market mode is global. You may use global ETFs and listed equities, but do not force Australia/ASX exposure unless the user explicitly asks for it. Do not make every holding an ETF; each growth or thematic sleeve should include individual companies when appropriate.';
 
     const payload = await callOpenAIJson({
       name: 'portfolio_allocation',
