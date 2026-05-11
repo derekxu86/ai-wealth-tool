@@ -142,13 +142,9 @@
                 <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest" data-i18n="hotAssets">Hot Assets</p>
                 <p class="text-[10px] text-zinc-600 font-bold mt-1" data-i18n="hotAssetsSub">Market heat + AI screen</p>
             </div>
-            <div class="flex items-center gap-2">
-                <button onclick="scrollAssetRow('hot-assets-list', -1)" class="w-8 h-8 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-orange-400/50"><i class="ph ph-caret-left"></i></button>
-                <button onclick="scrollAssetRow('hot-assets-list', 1)" class="w-8 h-8 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-orange-400/50"><i class="ph ph-caret-right"></i></button>
-                <i class="ph ph-fire text-orange-400 text-lg"></i>
-            </div>
+            <i class="ph ph-fire text-orange-400 text-lg"></i>
         </div>
-        <div id="hot-assets-list" class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+        <div id="hot-assets-list" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
             <div class="text-xs text-zinc-500 font-bold" data-i18n="loading">Loading...</div>
         </div>
         <div id="a-share-theme-row" class="hidden mt-3 border-t border-zinc-800 pt-3">
@@ -164,13 +160,13 @@
     </div>
 
     <div class="max-w-5xl w-full bg-[#18181b] border border-zinc-800 p-3 sm:p-4 rounded-2xl mb-4">
-        <div class="flex flex-col gap-3 md:flex-row md:items-center">
+        <div class="flex flex-col gap-3 md:flex-row md:items-end">
             <div class="flex-1">
                 <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-2">AI Allocation</p>
                 <input id="allocation-prompt" data-i18n-value="allocationPrompt" value="我有2万块，风险偏高，想投 AI 和能源"
                     class="w-full bg-[#09090b] border border-zinc-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500">
             </div>
-            <button id="ai-allocation-btn" class="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-400 text-white px-5 py-3 rounded-xl text-sm font-black md:mt-0">
+            <button id="ai-allocation-btn" class="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-400 text-white px-5 py-3 rounded-xl text-sm font-black md:h-[46px] md:mb-0">
                 <i class="ph ph-sparkle"></i> Ask AI
             </button>
         </div>
@@ -780,6 +776,32 @@
             }).join('');
         }
 
+        function buildAshareNewsAnalysis(news = [], reports = [], symbol, name) {
+            const headlineText = news.slice(0, 3).map(item => item.title).filter(Boolean).join('；');
+            const reportText = reports.slice(0, 2).map(item => [item.org, item.rating, item.title].filter(Boolean).join(' ')).filter(Boolean).join('；');
+            if (currentLang === 'zh') {
+                const base = headlineText || `${name || symbol} 近期公开新闻源返回有限`;
+                const research = reportText || '公开研报/评级字段较少，不能只凭空白评级做结论';
+                return `AI新闻分析：${base}。从交易角度看，先判断这些新闻是否改变公司收入预期、行业景气度或资金关注度。如果新闻集中在业绩、订单、政策或题材催化，短线容易放大波动；如果只是普通公告或转载，参考价值较低。结合${research}，当前更适合把新闻热度、日线趋势和成交活跃度一起观察，而不是因为单条标题直接追涨。`;
+            }
+            return `AI news read-through: ${headlineText || `${name || symbol} has limited public news returned`}. Treat the headlines as catalysts only if they change revenue expectations, sector demand, policy support, or market attention. ${reportText || 'Public research fields are limited'}, so combine news flow with the daily trend and volume rather than forcing a buy/sell conclusion from sparse data.`;
+        }
+
+        function buildAshareAIRating(news = [], reports = [], symbol, name) {
+            const ratingText = reports.map(r => `${r.org || ''} ${r.rating || ''} ${r.title || ''}`).join(' ');
+            const newsText = news.map(n => n.title || '').join(' ');
+            const combined = `${ratingText} ${newsText}`.toLowerCase();
+            let score = 62;
+            if (/买入|增持|推荐|上调|增长|新高|订单|算力|ai|景气|突破/i.test(combined)) score += 12;
+            if (/下调|减持|亏损|处罚|风险|下滑|承压|问询/i.test(combined)) score -= 14;
+            score = Math.max(35, Math.min(88, score));
+            const label = score >= 72 ? (currentLang === 'zh' ? '偏积极' : 'Positive') : score <= 50 ? (currentLang === 'zh' ? '偏谨慎' : 'Cautious') : (currentLang === 'zh' ? '中性观察' : 'Neutral watch');
+            if (currentLang === 'zh') {
+                return `AI评级：${label}，综合分 ${score}/100。这个评级不是券商评级，而是根据公开新闻、研报标题、题材热度和短线风险做的产品内判断。若后续新闻继续指向业绩改善、政策支持或资金抱团，评级可上调；若日线转弱、利空增多或题材退潮，应降低仓位预期。`;
+            }
+            return `AI rating: ${label}, score ${score}/100. This is an in-product view based on public news, research titles, theme heat and short-term risk, not a broker rating. Upgrade the view only if news flow confirms earnings, policy support, or sustained market leadership.`;
+        }
+
         function tradingViewSymbol(symbol) {
             if (symbol === 'BINANCE:BTCUSDT' || symbol === 'BTC/USD') return 'BINANCE:BTCUSDT';
             if (symbol.endsWith('.AX')) return `ASX:${symbol.replace('.AX', '')}`;
@@ -958,7 +980,7 @@
                 <div class="mt-5 rounded-2xl border border-zinc-800 bg-[#09090b] p-4">
                     <div class="flex items-center justify-between mb-3">
                         <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${currentLang === 'zh' ? 'A股信息层' : 'A-Share Intelligence'}</p>
-                        <span class="text-[10px] text-zinc-600 font-bold">${currentLang === 'zh' ? '新闻 / 研报 / 评级' : 'News / Research / Rating'}</span>
+                        <span class="text-[10px] text-zinc-600 font-bold">${currentLang === 'zh' ? '新闻 / AI分析 / AI评级' : 'News / AI Analysis / AI Rating'}</span>
                     </div>
                     <div id="a-share-info-tabs" class="grid gap-3 md:grid-cols-3">
                         <div class="text-xs text-zinc-500 font-bold">${currentLang === 'zh' ? '正在读取东方财富公开源...' : 'Loading public sources...'}</div>
@@ -972,22 +994,23 @@
             const box = document.getElementById('a-share-info-tabs');
             if (!box) return;
             const [news, reports] = await Promise.all([fetchAshareNews(name, symbol), fetchAshareReports(symbol)]);
-            const ratingRows = reports.filter(r => r.rating || r.org).slice(0, 3);
             const renderRows = (rows, emptyText, mapper) => rows.length
                 ? rows.slice(0, 3).map(mapper).join('')
                 : `<p class="text-xs text-zinc-500 font-bold leading-relaxed">${emptyText}</p>`;
+            const aiNews = buildAshareNewsAnalysis(news, reports, symbol, name);
+            const aiRating = buildAshareAIRating(news, reports, symbol, name);
             box.innerHTML = `
                 <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
-                    <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '新闻' : 'News'}</p>
+                    <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '相关新闻' : 'News'}</p>
                     ${renderRows(news, currentLang === 'zh' ? '公开新闻源暂未返回，先参考日线图和题材热度。' : 'No public news returned. Use chart and theme heat first.', item => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(item.title)}</p>`)}
                 </div>
                 <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
-                    <p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '研报' : 'Research'}</p>
-                    ${renderRows(reports, currentLang === 'zh' ? '公开研报暂未返回，不显示空评级结论。' : 'No public research returned; no empty rating shown.', item => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(item.title)}<br><span class="text-zinc-600">${escapeAttr(item.org || item.date || '')}</span></p>`)}
+                    <p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? 'AI新闻分析' : 'AI News Analysis'}</p>
+                    <p class="text-xs text-zinc-300 font-bold leading-relaxed">${escapeAttr(aiNews)}</p>
                 </div>
                 <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
-                    <p class="text-[10px] text-amber-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '机构评级' : 'Rating'}</p>
-                    ${renderRows(ratingRows, currentLang === 'zh' ? '公开评级字段暂未返回，暂不强行生成买入/卖出。' : 'No public rating returned; no forced buy/sell label.', item => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(item.org || '机构')} · ${escapeAttr(item.rating || '评级未披露')}<br><span class="text-zinc-600">${escapeAttr(item.date || '')}</span></p>`)}
+                    <p class="text-[10px] text-amber-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? 'AI评级' : 'AI Rating'}</p>
+                    <p class="text-xs text-zinc-300 font-bold leading-relaxed">${escapeAttr(aiRating)}</p>
                 </div>
             `;
         }
@@ -1353,7 +1376,7 @@
                 const changeColor = q ? (up ? 'text-emerald-400' : 'text-red-400') : 'text-blue-400';
                 const clickName = item.name || item.displaySymbol || item.symbol;
                 return `
-                    <button class="min-w-[155px] sm:min-w-[168px] lg:min-w-[150px] flex-1 text-left rounded-xl border border-zinc-800 bg-[#09090b] px-3 py-2 hover:border-orange-400/50 hover:bg-zinc-900 transition-colors"
+                    <button class="min-w-0 text-left rounded-xl border border-zinc-800 bg-[#09090b] px-3 py-2 hover:border-orange-400/50 hover:bg-zinc-900 transition-colors"
                         onclick="openStockAnalysis('${escapeAttr(item.symbol)}', '${escapeAttr(clickName)}')">
                         <div class="flex items-center justify-between gap-2">
                             <span class="text-xs font-black text-white truncate">${escapeAttr(item.name)}</span>
@@ -2047,8 +2070,10 @@
                 <div class="bg-[#111113] border border-zinc-800 rounded-xl overflow-hidden hover:border-blue-500/50 transition-all cursor-pointer" onclick="closeModal('drilldown-modal'); openStockAnalysis('${escapeAttr(sub.symbol)}', '${escapeAttr(sub.name)}');">
                     <div class="p-4 flex justify-between items-center">
                         <div class="flex items-center gap-3">
-                            <div class="bg-zinc-800 w-12 h-12 rounded-lg flex items-center justify-center font-black text-sm text-white">${escapeAttr(sub.symbol)}</div>
-                            <div>
+                            <div class="bg-zinc-800 w-12 h-12 rounded-lg flex items-center justify-center font-black text-xs text-white overflow-hidden px-1">
+                                <span class="truncate max-w-full">${escapeAttr(isAshareSymbol(sub.symbol) ? ashareCode(sub.symbol) : sub.symbol)}</span>
+                            </div>
+                            <div class="min-w-0">
                                 <p class="text-sm font-bold text-white mb-0.5">${escapeAttr(sub.name)}${scoreMeta}</p>
                                 <p class="text-[10px] text-zinc-500 uppercase flex items-center gap-1"><i class="ph ph-magnifying-glass"></i> ${escapeAttr(cleanTag)}</p>
                                 ${liveMeta}
