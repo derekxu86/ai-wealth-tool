@@ -96,22 +96,6 @@
                         <span class="font-bold" data-i18n="agg">Aggressive</span><i class="ph ph-rocket-launch text-xl text-purple-500"></i>
                     </button>
                 </div>
-                <div id="hot-assets-panel" class="mt-5 bg-[#111113] border border-zinc-800/80 rounded-2xl p-3 sm:p-4">
-                    <div class="flex items-center justify-between gap-3 mb-3">
-                        <div>
-                            <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest" data-i18n="hotAssets">Hot Assets</p>
-                            <p class="text-[10px] text-zinc-600 font-bold mt-1" data-i18n="hotAssetsSub">Market heat + AI screen</p>
-                        </div>
-                        <i class="ph ph-fire text-orange-400 text-lg"></i>
-                    </div>
-                    <div id="hot-assets-list" class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                        <div class="text-xs text-zinc-500 font-bold" data-i18n="loading">Loading...</div>
-                    </div>
-                    <div id="a-share-theme-row" class="hidden mt-3 border-t border-zinc-800 pt-3">
-                        <p class="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-2">A股题材热度</p>
-                        <div id="a-share-theme-list" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -143,6 +127,23 @@
                     <p class="text-xs font-bold text-emerald-400 flex items-center gap-1"><i class="ph ph-trend-up"></i> <span id="return-5y">--</span></p>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div id="hot-assets-panel" class="max-w-5xl w-full bg-[#18181b] border border-zinc-800/70 rounded-2xl p-3 sm:p-4 mb-4">
+        <div class="flex items-center justify-between gap-3 mb-3">
+            <div>
+                <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest" data-i18n="hotAssets">Hot Assets</p>
+                <p class="text-[10px] text-zinc-600 font-bold mt-1" data-i18n="hotAssetsSub">Market heat + AI screen</p>
+            </div>
+            <i class="ph ph-fire text-orange-400 text-lg"></i>
+        </div>
+        <div id="hot-assets-list" class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            <div class="text-xs text-zinc-500 font-bold" data-i18n="loading">Loading...</div>
+        </div>
+        <div id="a-share-theme-row" class="hidden mt-3 border-t border-zinc-800 pt-3">
+            <p class="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-2">A股题材热度</p>
+            <div id="a-share-theme-list" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
         </div>
     </div>
 
@@ -810,8 +811,8 @@
             }).filter(row => Number.isFinite(row.close) && Number.isFinite(row.high) && Number.isFinite(row.low));
         }
 
-        function drawAshareKlineChart(klines) {
-            const canvas = document.getElementById('a-share-kline-canvas');
+        function drawAshareKlineChart(klines, canvasId = 'a-share-kline-canvas') {
+            const canvas = document.getElementById(canvasId);
             if (!canvas) return;
             const holder = canvas.parentElement;
             const box = holder.getBoundingClientRect();
@@ -877,13 +878,6 @@
                         <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${currentLang === 'zh' ? 'A股信息层' : 'A-Share Intelligence'}</p>
                         <span class="text-[10px] text-zinc-600 font-bold">${currentLang === 'zh' ? '新闻 / 研报 / 评级' : 'News / Research / Rating'}</span>
                     </div>
-                    <div class="mb-3 rounded-xl border border-zinc-800 overflow-hidden bg-[#050506]">
-                        <div class="flex items-center justify-between px-3 py-2 border-b border-zinc-800">
-                            <p class="text-[10px] text-zinc-500 font-black uppercase tracking-widest">${currentLang === 'zh' ? '日线蜡烛图' : 'Daily Candles'}</p>
-                            <span class="text-[10px] text-red-400 font-bold">${currentLang === 'zh' ? '东方财富' : 'Eastmoney'}</span>
-                        </div>
-                        <div class="h-64 p-3"><canvas id="a-share-kline-canvas" class="block w-full h-full"></canvas></div>
-                    </div>
                     <div id="a-share-info-tabs" class="grid gap-3 md:grid-cols-3">
                         <div class="text-xs text-zinc-500 font-bold">${currentLang === 'zh' ? '正在读取东方财富公开源...' : 'Loading public sources...'}</div>
                     </div>
@@ -895,8 +889,7 @@
         async function hydrateAshareInfo(symbol, name) {
             const box = document.getElementById('a-share-info-tabs');
             if (!box) return;
-            const [news, reports, klines] = await Promise.all([fetchAshareNews(name, symbol), fetchAshareReports(symbol), fetchAshareKlines(symbol)]);
-            requestAnimationFrame(() => drawAshareKlineChart(klines));
+            const [news, reports] = await Promise.all([fetchAshareNews(name, symbol), fetchAshareReports(symbol)]);
             const ratingRows = reports.filter(r => r.rating || r.org).slice(0, 3);
             const renderRows = (rows, emptyText, mapper) => rows.length
                 ? rows.slice(0, 3).map(mapper).join('')
@@ -1046,12 +1039,19 @@
                 const cb = `jsonp_${Date.now()}_${Math.random().toString(16).slice(2)}`;
                 const script = document.createElement('script');
                 const sep = url.includes('?') ? '&' : '?';
+                const timer = setTimeout(() => {
+                    delete window[cb];
+                    script.remove();
+                    reject(new Error('jsonp timeout'));
+                }, 8000);
                 window[cb] = data => {
+                    clearTimeout(timer);
                     delete window[cb];
                     script.remove();
                     resolve(data);
                 };
                 script.onerror = () => {
+                    clearTimeout(timer);
                     delete window[cb];
                     script.remove();
                     reject(new Error('jsonp failed'));
@@ -1270,7 +1270,7 @@
                 const changeColor = q ? (up ? 'text-emerald-400' : 'text-red-400') : 'text-blue-400';
                 const clickName = item.name || item.displaySymbol || item.symbol;
                 return `
-                    <button class="min-w-[172px] sm:min-w-[188px] text-left rounded-xl border border-zinc-800 bg-[#09090b] px-3 py-2 hover:border-orange-400/50 hover:bg-zinc-900 transition-colors"
+                    <button class="min-w-[155px] sm:min-w-[168px] lg:min-w-[150px] flex-1 text-left rounded-xl border border-zinc-800 bg-[#09090b] px-3 py-2 hover:border-orange-400/50 hover:bg-zinc-900 transition-colors"
                         onclick="openStockAnalysis('${escapeAttr(item.symbol)}', '${escapeAttr(clickName)}')">
                         <div class="flex items-center justify-between gap-2">
                             <span class="text-xs font-black text-white truncate">${escapeAttr(item.name)}</span>
@@ -1300,7 +1300,7 @@
                 const up = Number(item.quote?.dp) >= 0;
                 const change = Number.isFinite(Number(item.quote?.dp)) ? `${up ? '+' : ''}${Number(item.quote.dp).toFixed(2)}%` : `${item.score}/100`;
                 return `
-                    <button class="min-w-[150px] text-left rounded-xl border border-zinc-800 bg-[#09090b] px-3 py-2 hover:border-emerald-400/50 hover:bg-zinc-900 transition-colors"
+                    <button class="min-w-[145px] sm:min-w-[155px] flex-1 text-left rounded-xl border border-zinc-800 bg-[#09090b] px-3 py-2 hover:border-emerald-400/50 hover:bg-zinc-900 transition-colors"
                         onclick="openStockAnalysis('${escapeAttr(item.symbol)}', '${escapeAttr(item.name)}')">
                         <div class="flex items-center justify-between gap-2">
                             <span class="text-xs font-black text-white truncate">${escapeAttr(item.name)}</span>
@@ -1496,6 +1496,27 @@
                 return [{ symbol, description: 'A股股票' }];
             }
         }
+        function normalizeAshareSuggest(row) {
+            const code = row.Code || row.code || row.SecurityCode || row.SECURITY_CODE;
+            const name = row.Name || row.name || row.SecurityName || row.SECURITY_NAME;
+            const quoteId = String(row.QuoteID || row.QuoteId || row.quoteid || '');
+            if (!/^\d{6}$/.test(String(code || ''))) return null;
+            const symbol = quoteId.startsWith('1.') ? `${code}.SS` : quoteId.startsWith('0.') ? `${code}.SZ` : ashareSymbolFromCode(code);
+            return { symbol, description: name || symbol, source: 'Eastmoney' };
+        }
+        async function eastmoneyAshareSearch(query) {
+            const q = String(query || '').trim();
+            if (!q) return [];
+            try {
+                const token = 'D43BF722C8E33BDC906FB84D85E326E8';
+                const url = `https://searchapi.eastmoney.com/api/suggest/get?input=${encodeURIComponent(q)}&type=14&token=${token}&count=10`;
+                const data = await jsonpRequest(url, 'cb');
+                const rows = data?.QuotationCodeTable?.Data || data?.Data || data?.data || [];
+                return Array.isArray(rows) ? rows.map(normalizeAshareSuggest).filter(Boolean).slice(0, 8) : [];
+            } catch {
+                return [];
+            }
+        }
         function renderSearchResults(results, query, isFallback = false) {
             const dropdown = document.getElementById('search-dropdown');
             const merged = results && results.length ? results : localSearch(query);
@@ -1522,17 +1543,18 @@
             
             searchTimeout = setTimeout(async () => {
                 try {
-                    const ashareResults = await quickAshareSearch(query);
+                    const [ashareResults, eastmoneyResults] = await Promise.all([quickAshareSearch(query), eastmoneyAshareSearch(query)]);
                     const data = await fetchApiJson(withQuery(SEARCH_API_ENDPOINT, { q: query }));
                     const remote = data?.result || [];
-                    const filtered = [...ashareResults, ...remote]
+                    const filtered = [...ashareResults, ...eastmoneyResults, ...remote]
                         .filter((item, index, arr) => item?.symbol && arr.findIndex(x => String(x.symbol).toUpperCase() === String(item.symbol).toUpperCase()) === index)
                         .slice(0, 8); 
                     
                     renderSearchResults(filtered, query, false);
                 } catch(err) {
-                    const ashareResults = await quickAshareSearch(query);
-                    renderSearchResults(ashareResults, query, !ashareResults.length);
+                    const fallbackAshare = [...await quickAshareSearch(query), ...await eastmoneyAshareSearch(query)]
+                        .filter((item, index, arr) => item?.symbol && arr.findIndex(x => String(x.symbol).toUpperCase() === String(item.symbol).toUpperCase()) === index);
+                    renderSearchResults(fallbackAshare, query, !fallbackAshare.length);
                 }
             }, 500);
         });
@@ -1613,12 +1635,12 @@
                     </div>
                 </div>
 
-                <div class="mb-5 h-24 rounded-2xl border border-zinc-800 bg-[#09090b] p-3">
+                <div class="mb-5 ${isAshareSymbol(symbol) ? 'h-72' : 'h-24'} rounded-2xl border border-zinc-800 bg-[#09090b] p-3">
                     <div class="mb-2 flex items-center justify-between">
-                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${uiText.priceTrace}</p>
-                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${hasQuote ? data.quoteSource : uiText.noLiveQuote}</p>
+                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${isAshareSymbol(symbol) ? (currentLang === 'zh' ? '日线蜡烛图' : 'Daily Candles') : uiText.priceTrace}</p>
+                        <p class="text-[10px] ${isAshareSymbol(symbol) ? 'text-red-400' : 'text-zinc-500'} font-bold uppercase tracking-widest">${isAshareSymbol(symbol) ? (currentLang === 'zh' ? '东方财富' : 'Eastmoney') : (hasQuote ? data.quoteSource : uiText.noLiveQuote)}</p>
                     </div>
-                    <div class="h-14"><canvas id="stock-price-chart"></canvas></div>
+                    <div class="${isAshareSymbol(symbol) ? 'h-60' : 'h-14'}"><canvas id="${isAshareSymbol(symbol) ? 'a-share-main-kline-canvas' : 'stock-price-chart'}"></canvas></div>
                 </div>
 
                 <div class="mb-5 grid gap-3 md:grid-cols-2">
@@ -1666,7 +1688,11 @@
                 </div>
                 ${renderAshareInfoPanel(symbol, name)}
             `;
-            renderStockSparkline(symbol, q);
+            if (isAshareSymbol(symbol)) {
+                fetchAshareKlines(symbol).then(klines => requestAnimationFrame(() => drawAshareKlineChart(klines, 'a-share-main-kline-canvas')));
+            } else {
+                renderStockSparkline(symbol, q);
+            }
             renderTechnicalFallback(symbol, hasQuote ? q.dp : 0);
             if (isPremiumMember()) {
                 fetchAITradingSignal({
@@ -1695,7 +1721,7 @@
             clearInterval(stockChartTimer);
             stockChartTimer = setInterval(async () => {
                 const fresh = isAshareSymbol(symbol) ? await fetchAshareQuote(symbol) : await fetchFullStockData(symbol);
-                if (!fresh || !document.getElementById('stock-price-chart')) return;
+                if (!fresh || (!document.getElementById('stock-price-chart') && !document.getElementById('a-share-main-kline-canvas'))) return;
                 const fq = fresh.quote;
                 if ((!fresh.quoteAvailable && !isAshareSymbol(symbol)) || fq.c === null || fq.c === undefined) return;
                 const freshUp = Number(fq.dp) >= 0;
@@ -1703,7 +1729,11 @@
                 document.getElementById('search-price').textContent = formatQuotePrice(symbol, fq.c);
                 document.getElementById('search-change').className = `inline-flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-black bg-${freshColor}-500/10 text-${freshColor}-400`;
                 document.getElementById('search-change').innerHTML = `<i class="ph ${freshUp ? 'ph-trend-up' : 'ph-trend-down'}"></i> ${Number(fq.dp).toFixed(2)}%`;
-                renderStockSparkline(symbol, fq);
+                if (isAshareSymbol(symbol)) {
+                    fetchAshareKlines(symbol).then(klines => requestAnimationFrame(() => drawAshareKlineChart(klines, 'a-share-main-kline-canvas')));
+                } else {
+                    renderStockSparkline(symbol, fq);
+                }
             }, 15000);
         }
 
