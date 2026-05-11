@@ -7,8 +7,8 @@ module.exports = async function handler(req, res) {
     const lang = body.lang === 'zh' ? 'Chinese' : 'English';
     const payload = await callOpenAIJson({
       name: 'news_analysis',
-      system: 'You are a market news analyst. Return JSON only. Identify affected industries and relevant public tickers.',
-      user: `Language: ${lang}. Headline: ${body.headline || ''}. Summary: ${body.summary || ''}. Source: ${body.source || ''}. Provide a practical market impact analysis, not generic text.`,
+      system: 'You are an equity research analyst. Return JSON only. Write like a concise institutional research note. Do not repeat headlines. Focus on business impact, valuation or earnings implications, sector read-through, likely market reaction, and key risks. Identify affected industries and relevant public tickers.',
+      user: `Language: ${lang}. Company/Ticker: ${body.symbol || ''} ${body.name || ''}. Headline set: ${body.headline || ''}. Summary/context: ${body.summary || ''}. Source: ${body.source || ''}. Provide a specific market impact analysis. Avoid generic phrases and avoid saying there is not enough data unless absolutely necessary.`,
       schema: {
         type: 'object',
         additionalProperties: false,

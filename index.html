@@ -144,7 +144,7 @@
             </div>
             <i class="ph ph-fire text-orange-400 text-lg"></i>
         </div>
-        <div id="hot-assets-list" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+        <div id="hot-assets-list" class="grid grid-cols-2 md:grid-cols-6 gap-2">
             <div class="text-xs text-zinc-500 font-bold" data-i18n="loading">Loading...</div>
         </div>
         <div id="a-share-theme-row" class="hidden mt-3 border-t border-zinc-800 pt-3">
@@ -307,6 +307,7 @@
         const STOCK_DATA_ENDPOINT = '/api/stock-data';
         const SEARCH_API_ENDPOINT = '/api/search';
         const NEWS_API_ENDPOINT = '/api/news';
+        const COMPANY_NEWS_ENDPOINT = '/api/company-news';
         const MARKET_SCAN_ENDPOINT = '/api/market-scan';
         const LOCAL_API_BASE = ['localhost', '127.0.0.1'].includes(location.hostname) ? 'http://127.0.0.1:8780' : '';
         const apiCache = {}; 
@@ -787,15 +788,35 @@
             return tags.length ? tags : ['新闻催化'];
         }
 
+        function inferProfessionalImpact(text = '', symbol = '', name = '') {
+            const t = String(text || '').toLowerCase();
+            if (/净利|营收|利润|业绩|earnings|revenue|profit|guidance|forecast|预增|预减/.test(t)) {
+                return '重点在盈利预期重估。若收入和利润同步改善，市场通常会提高未来两个季度的业绩能见度；若仅利润改善但收入疲弱，需要警惕一次性收益或费用节奏造成的质量折扣。';
+            }
+            if (/订单|合同|中标|产能|交付|客户|order|contract|backlog|capacity|shipment/.test(t)) {
+                return '重点在订单兑现和产能利用率。订单类新闻若能转化为毛利率稳定的收入，会强化中期成长逻辑；但若交付周期长或客户集中度高，估值提升会受到折扣。';
+            }
+            if (/回购|增持|减持|分红|质押|buyback|dividend|stake|insider/.test(t)) {
+                return '重点在资本动作和股东信号。回购、分红和重要股东增持通常改善风险偏好；减持或质押则可能压制短线估值弹性，需要观察成交量能否消化抛压。';
+            }
+            if (/监管|处罚|诉讼|问询|调查|sanction|lawsuit|probe|regulator|risk/.test(t)) {
+                return '重点在风险折价。监管、诉讼或问询会降低资金对确定性的定价，短线反弹需要更高成交量确认，否则容易形成估值压缩。';
+            }
+            if (/ai|算力|芯片|机器人|新能源|低空|semiconductor|cloud|energy|robot|ev|battery/.test(t)) {
+                return '重点在题材扩散和产业链映射。若同板块龙头同步走强，说明资金在做行业贝塔；若只有个股新闻驱动，则更依赖公司自身订单、利润率和后续公告验证。';
+            }
+            return '重点在信息是否改变预期差。单条新闻本身不是交易理由，关键是它是否提高收入确定性、行业景气度、利润率趋势或资金关注度。';
+        }
+
         function buildAshareNewsAnalysis(news = [], reports = [], symbol, name) {
             const headlineText = news.slice(0, 3).map(item => item.title).filter(Boolean).join('；');
             const reportText = reports.slice(0, 2).map(item => [item.org, item.rating, item.title].filter(Boolean).join(' ')).filter(Boolean).join('；');
             const tags = ashareNewsKeywords(`${headlineText} ${reportText}`);
+            const impact = inferProfessionalImpact(`${headlineText} ${reportText}`, symbol, name);
             if (currentLang === 'zh') {
-                const base = headlineText || `${name || symbol} 近期公开新闻较少`;
-                return `核心催化集中在${tags.join('、')}。相关新闻包括：${base}。若新闻指向业绩兑现或订单改善，股价更容易获得基本面支撑；若主要来自题材传播，则更依赖成交量和板块持续性。短线重点看日线是否维持在关键均线之上、放量是否连续，以及同题材龙头是否同步走强。`;
+                return `核心催化集中在${tags.join('、')}。${impact} 操作上更应关注三点：第一，日线是否维持在关键均线之上；第二，放量上涨是否连续而不是单日脉冲；第三，同题材龙头和指数是否共振。若三者同时成立，新闻对股价的传导更可信；若量能衰减或板块分化，短线评级需要下调。`;
             }
-            return `Key catalysts: ${tags.join(', ')}. Headlines: ${headlineText || `${name || symbol} has limited public news returned`}. If the flow confirms earnings, orders, or sector demand, price action has stronger support; if it is mostly theme-driven, watch volume persistence and sector leadership.`;
+            return `Key catalysts: ${tags.join(', ')}. ${impact} Watch whether price stays above key moving averages, volume expands for more than one session, and sector leaders confirm the move.`;
         }
 
         function buildAshareAIRating(news = [], reports = [], symbol, name) {
@@ -1024,6 +1045,104 @@
                 <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
                     <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '相关新闻' : 'News'}</p>
                     ${renderRows(news, currentLang === 'zh' ? '公开新闻源暂未返回，先参考日线图和题材热度。' : 'No public news returned. Use chart and theme heat first.', item => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(item.title)}</p>`)}
+                </div>
+                ${premiumPanel}
+            `;
+        }
+
+        async function fetchCompanyNews(symbol) {
+            if (isAshareSymbol(symbol)) return [];
+            try {
+                const data = await fetchApiJson(withQuery(COMPANY_NEWS_ENDPOINT, { symbol }));
+                return Array.isArray(data) ? data.filter(n => n && n.headline).slice(0, 6) : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function buildGlobalNewsAnalysis(news = [], symbol, name, profile = {}) {
+            const text = news.map(n => n.headline || '').join('；');
+            const impact = inferProfessionalImpact(text, symbol, name);
+            if (currentLang === 'zh') {
+                return `${name || symbol} 的新闻需要放在 ${profile.finnhubIndustry || '所属行业'} 的景气度里看。${impact} 进一步看，若新闻涉及业绩、指引或订单，重点跟踪下一季收入增速和利润率；若是产品、监管或资本开支新闻，则重点观察估值倍数和同业表现是否同步修复。`;
+            }
+            return `${name || symbol} news should be read through the ${profile.finnhubIndustry || 'sector'} cycle. ${impact} If the flow relates to earnings, guidance, or orders, track next-quarter revenue growth and margin; if it is product, regulatory, or capex-related, watch valuation multiples and peer confirmation.`;
+        }
+
+        function buildGlobalAIRating(news = [], symbol, name, profile = {}) {
+            const text = `${news.map(n => n.headline || '').join(' ')} ${profile.finnhubIndustry || ''}`.toLowerCase();
+            let score = 60;
+            if (/beat|raise|upgrade|growth|order|contract|buyback|ai|cloud|semiconductor|margin/.test(text)) score += 12;
+            if (/miss|cut|downgrade|lawsuit|probe|sanction|risk|decline|weak/.test(text)) score -= 14;
+            score = Math.max(35, Math.min(88, score));
+            const label = score >= 72 ? (currentLang === 'zh' ? '偏积极' : 'Positive') : score <= 50 ? (currentLang === 'zh' ? '偏谨慎' : 'Cautious') : (currentLang === 'zh' ? '中性观察' : 'Neutral watch');
+            return `${label} · ${score}/100`;
+        }
+
+        function renderGlobalInfoPanel(symbol, name) {
+            if (isAshareSymbol(symbol)) return '';
+            setTimeout(() => hydrateGlobalInfo(symbol, name), 50);
+            return `
+                <div class="mt-5 rounded-2xl border border-zinc-800 bg-[#09090b] p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${currentLang === 'zh' ? '全球个股新闻层' : 'Global Stock News'}</p>
+                        <span class="text-[10px] text-zinc-600 font-bold">${currentLang === 'zh' ? '新闻 / AI分析与评级' : 'News / AI Analysis & Rating'}</span>
+                    </div>
+                    <div id="global-stock-info-tabs" class="grid gap-3 md:grid-cols-3">
+                        <div class="text-xs text-zinc-500 font-bold">${currentLang === 'zh' ? '正在读取个股新闻...' : 'Loading company news...'}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function fetchAIStockNewsAnalysis(payload) {
+            if (!isPremiumMember()) return null;
+            try {
+                const data = await fetchApiJson(OPENAI_NEWS_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                return data && data.analysis ? data : null;
+            } catch {
+                return null;
+            }
+        }
+
+        async function hydrateGlobalInfo(symbol, name) {
+            const box = document.getElementById('global-stock-info-tabs');
+            if (!box) return;
+            const news = await fetchCompanyNews(symbol);
+            const profile = {};
+            const renderNews = news.length
+                ? news.slice(0, 3).map(n => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(n.headline)}</p>`).join('')
+                : `<p class="text-xs text-zinc-500 font-bold leading-relaxed">${currentLang === 'zh' ? '个股新闻源暂未返回。' : 'No company news returned.'}</p>`;
+            let analysis = buildGlobalNewsAnalysis(news, symbol, name, profile);
+            let rating = buildGlobalAIRating(news, symbol, name, profile);
+            if (isPremiumMember()) {
+                const ai = await fetchAIStockNewsAnalysis({
+                    symbol,
+                    name,
+                    headline: news.map(n => n.headline).filter(Boolean).join(' | '),
+                    summary: news.map(n => n.summary).filter(Boolean).join(' '),
+                    source: 'Company news',
+                    lang: currentLang
+                });
+                if (ai?.analysis) analysis = ai.analysis;
+            }
+            const premiumPanel = isPremiumMember() ? `
+                <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3 md:col-span-2">
+                    <div class="flex items-start justify-between gap-3 mb-2">
+                        <p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest">${currentLang === 'zh' ? 'AI新闻分析与评级' : 'AI News Analysis & Rating'}</p>
+                        <span class="shrink-0 px-2 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 text-[10px] font-black">${escapeAttr(rating)}</span>
+                    </div>
+                    <p class="text-xs text-zinc-300 font-bold leading-relaxed">${escapeAttr(analysis)}</p>
+                </div>
+            ` : `<div class="md:col-span-2">${premiumGateHtml('analysis')}</div>`;
+            box.innerHTML = `
+                <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
+                    <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '相关新闻' : 'Company News'}</p>
+                    ${renderNews}
                 </div>
                 ${premiumPanel}
             `;
@@ -1747,7 +1866,7 @@
             const dict = i18n[currentLang].metrics;
             
             modal.classList.replace('hidden', 'flex'); setTimeout(() => modal.classList.add('show'), 10);
-            body.innerHTML = `<div class="flex flex-col items-center py-10"><i class="ph ph-circle-notch animate-spin text-4xl text-blue-500 mb-4"></i><p class="text-xs font-bold text-zinc-500">${currentLang === 'zh' ? 'AI 正在分析这只股票...' : 'Running AI Matrix Analysis...'}</p></div>`;
+            body.innerHTML = `<div class="flex flex-col items-center py-10"><i class="ph ph-circle-notch animate-spin text-4xl text-blue-500 mb-4"></i><p class="text-xs font-bold text-zinc-500">${currentLang === 'zh' ? '正在打开标的资料...' : 'Opening asset profile...'}</p></div>`;
 
             let data = await fetchFullStockData(symbol);
             if(!data) { body.innerHTML = `<p class="text-red-500 font-bold text-center">Data connection failed for ${symbol}</p>`; return; }
@@ -1781,7 +1900,7 @@
             const ratingText = buyRec > 70 ? (currentLang==='zh'?'强烈买入':'Strong Buy') : buyRec > 40 ? (currentLang==='zh'?'买入/持有':'Buy/Hold') : (currentLang==='zh'?'观望/待定':'Hold/Review');
             const tvSymbol = tradingViewSymbol(symbol);
             const uiText = {
-                running: currentLang === 'zh' ? 'AI 正在分析...' : 'Running AI Matrix Analysis...',
+                running: currentLang === 'zh' ? '正在加载...' : 'Loading...',
                 priceTrace: currentLang === 'zh' ? '价格走势' : 'Live Price Trace',
                 noLiveQuote: currentLang === 'zh' ? '暂无实时价格' : 'No Live Quote',
                 priceVisible: currentLang === 'zh' ? '价格可在图表查看' : 'Price visible in chart',
@@ -1859,7 +1978,7 @@
                         <p class="text-sm font-bold text-white">${ai.risk}</p>
                     </div>
                 </div>
-                ${renderAshareInfoPanel(symbol, name)}
+                ${isAshareSymbol(symbol) ? renderAshareInfoPanel(symbol, name) : renderGlobalInfoPanel(symbol, name)}
             `;
             if (isAshareSymbol(symbol)) {
                 fetchAshareKlines(symbol).then(klines => requestAnimationFrame(() => drawAshareKlineChart(klines, 'a-share-main-kline-canvas')));
