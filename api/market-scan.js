@@ -1,4 +1,4 @@
-const { fetchTwelveQuote, fetchYahooQuote, sendJson } = require('./_utils');
+const { callOpenAIJson, fetchTwelveQuote, fetchYahooQuote, sendJson } = require('./_utils');
 
 const scanUniverse = [
   { name: 'NVIDIA Corp', symbol: 'NVDA', groups: ['aiHot', 'quality'] },
@@ -93,7 +93,70 @@ module.exports = async function handler(req, res) {
       }
     }
     Object.keys(groups).forEach(group => groups[group].sort((a, b) => b.score - a.score));
-    return sendJson(res, 200, { updatedAt: new Date().toISOString(), source: 'Twelve Data quote screen', groups });
+    const wantsAiPicks = req.query?.ai === '1' || req.query?.ai === 'true';
+    let aiPicks = [];
+    let aiPicksError = null;
+    try {
+      if (!wantsAiPicks) throw new Error('AI picks not requested');
+      const ranked = items
+        .filter(item => item.quote && item.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 18)
+        .map(item => ({
+          name: item.name,
+          symbol: item.symbol,
+          groups: item.groups,
+          changePercent: item.quote?.dp,
+          volume: item.quote?.volume,
+          screenScore: item.score,
+          screenTag: item.tag
+        }));
+      if (ranked.length) {
+        const ai = await callOpenAIJson({
+          name: 'ai_market_picks',
+          system: [
+            'You are an institutional stock-screening analyst.',
+            'Return JSON only.',
+            'Rank candidates by combining technical momentum, volume/liquidity, theme strength, business quality, catalyst durability, and downside risk.',
+            'Do not simply echo percentage gainers. Pick a balanced watchlist with clear bull case and risk case.',
+            'Use research language, not financial advice.'
+          ].join(' '),
+          user: `Candidate universe with live technical/market data: ${JSON.stringify(ranked)}.
+Select exactly 6 AI picks. For every pick, explain fundamental reason, technical reason, main catalyst, main risk, expected risk level, and a 0-100 conviction score.`,
+          schema: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              picks: {
+                type: 'array',
+                minItems: 6,
+                maxItems: 6,
+                items: {
+                  type: 'object',
+                  additionalProperties: false,
+                  properties: {
+                    name: { type: 'string' },
+                    symbol: { type: 'string' },
+                    score: { type: 'number' },
+                    risk: { type: 'string' },
+                    catalyst: { type: 'string' },
+                    fundamental: { type: 'string' },
+                    technical: { type: 'string' },
+                    riskNote: { type: 'string' }
+                  },
+                  required: ['name', 'symbol', 'score', 'risk', 'catalyst', 'fundamental', 'technical', 'riskNote']
+                }
+              }
+            },
+            required: ['picks']
+          }
+        });
+        aiPicks = Array.isArray(ai?.picks) ? ai.picks : [];
+      }
+    } catch (error) {
+      aiPicksError = error.message || 'AI picks unavailable';
+    }
+    return sendJson(res, 200, { updatedAt: new Date().toISOString(), source: 'Twelve Data quote screen + AI ranking', groups, aiPicks, aiPicksError });
   } catch {
     return sendJson(res, 502, { error: 'Market scan failed.' });
   }
