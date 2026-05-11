@@ -37,9 +37,9 @@
         @media (max-width: 640px) {
             .modal-content { max-height: 92vh; border-radius: 18px; }
             #search-modal-body { padding: 1rem; }
-            .news-v-container { height: 56px; }
-            .news-v-content { animation-duration: 38s; }
-            .news-item { height: 56px; line-height: 1.25; }
+            .news-v-container { height: 76px; }
+            .news-v-content { animation-duration: 44s; }
+            .news-item { height: 76px; line-height: 1.35; padding-right: 0.25rem; }
         }
     </style>
 </head>
@@ -111,6 +111,18 @@
                 <div class="flex-1 w-full max-h-64 overflow-y-auto pr-2 space-y-2 no-scrollbar" id="asset-list"></div>
             </div>
             <div id="dynamic-strategy-note" class="hidden mb-4 bg-blue-500/10 border border-blue-500/20 rounded-xl px-4 py-3 text-xs text-blue-200 leading-relaxed"></div>
+            <div id="hot-assets-panel" class="mb-4 bg-[#18181b] border border-zinc-800/70 rounded-2xl p-3 sm:p-4">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                    <div>
+                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest" data-i18n="hotAssets">Hot Assets</p>
+                        <p class="text-[10px] text-zinc-600 font-bold mt-1" data-i18n="hotAssetsSub">Market heat + AI screen</p>
+                    </div>
+                    <i class="ph ph-fire text-orange-400 text-lg"></i>
+                </div>
+                <div id="hot-assets-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div class="text-xs text-zinc-500 font-bold" data-i18n="loading">Loading...</div>
+                </div>
+            </div>
             <div class="mt-auto border-t border-zinc-800 pt-5 sm:pt-6 grid grid-cols-2 gap-3 sm:gap-4">
                 <div class="bg-[#18181b] rounded-2xl p-3 sm:p-4 border border-zinc-800/50">
                     <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1" data-i18n="proj1y">1Y Proj.</p>
@@ -217,7 +229,7 @@
     <div id="signal-modal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/80 backdrop-blur-md p-4">
         <div class="modal-content w-full max-w-md max-h-[85vh] bg-[#18181b] rounded-2xl border border-zinc-700 shadow-2xl flex flex-col overflow-hidden">
             <div class="px-6 py-4 border-b border-zinc-800 flex justify-between items-center bg-[#111113]">
-                <h3 class="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2"><i class="ph ph-sparkle text-lg"></i> AI Trading Signal</h3>
+                <h3 class="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2"><i class="ph ph-sparkle text-lg"></i> <span data-i18n="aiTradingSignal">AI Trading Signal</span></h3>
                 <button onclick="closeModal('signal-modal')" class="text-zinc-500 hover:text-white"><i class="ph ph-x text-xl"></i></button>
             </div>
             <div class="p-6 overflow-y-auto signal-scroll">
@@ -227,12 +239,12 @@
                         <p id="signal-modal-action" class="text-4xl font-black text-white">--</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Confidence</p>
+                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest" data-i18n="confidence">Confidence</p>
                         <p id="signal-modal-confidence" class="text-2xl font-black text-white">--</p>
                     </div>
                 </div>
                 <div class="rounded-xl border border-zinc-800 bg-[#09090b] p-4">
-                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-2">AI Analysis</p>
+                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-2" data-i18n="aiSignalAnalysis">AI Analysis</p>
                     <p id="signal-modal-reason" class="text-sm text-zinc-300 font-semibold leading-relaxed">--</p>
                 </div>
             </div>
@@ -265,6 +277,8 @@
                 liveFeed: "Live Feed", searchPlaceholder: "Ticker (AAPL, BHP.AX, 0700.HK...)",
                 aiAnalysis: "AI Asset Analysis", impactedTickers: "Impacted Industries & Tickers",
                 marketInsight: "Market Insight", newsSummaryLabel: "AI Executive Summary",
+                aiTradingSignal: "AI Trading Signal", confidence: "Confidence", aiSignalAnalysis: "AI Analysis",
+                hotAssets: "Hot Assets", hotAssetsSub: "Market heat + AI screen", loading: "Loading...",
                 allocationPrompt: "I have 20,000, higher risk tolerance, and want AI plus energy exposure.",
                 segmentAlloc: "Segment Allocation", portWeight: "Weight",
                 metrics: { ind: "Sector/Industry", rate: "Wall St. Rating", heat: "Market Heat", exp: "Momentum", idx: "AI Conviction", risk: "Risk Level" },
@@ -279,6 +293,8 @@
                 liveFeed: "全球专线已连", searchPlaceholder: "输入代码 (如 AAPL, BHP.AX, 0700.HK)",
                 aiAnalysis: "AI 多维标的分析", impactedTickers: "受影响行业与相关股票",
                 marketInsight: "市场洞察", newsSummaryLabel: "AI 深度摘要",
+                aiTradingSignal: "AI 交易信号", confidence: "信心指数", aiSignalAnalysis: "AI 分析",
+                hotAssets: "热门投资资产", hotAssetsSub: "市场热度 + AI 筛选", loading: "加载中...",
                 allocationPrompt: "我有2万块，风险偏高，想投 AI 和能源",
                 segmentAlloc: "板块分配额度", portWeight: "组合占比",
                 metrics: { ind: "所属行业", rate: "专业评级", heat: "市场热度", exp: "爆发力 (动量)", idx: "AI 投资指数", risk: "风险度评估" },
@@ -377,6 +393,17 @@
         let latestMarketPulse = [];
         let latestMarketScan = null;
         const formatCurrency = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+        function quoteCurrency(symbol) {
+            if (/\.(SZ|SS)$/i.test(symbol)) return { prefix: '¥', market: 'China A-share market', currency: 'CNY' };
+            if (/\.HK$/i.test(symbol)) return { prefix: 'HK$', market: 'Hong Kong market', currency: 'HKD' };
+            if (/\.AX$/i.test(symbol)) return { prefix: 'A$', market: 'Australian market', currency: 'AUD' };
+            return { prefix: '$', market: 'US/global market', currency: 'USD' };
+        }
+        function formatQuotePrice(symbol, price) {
+            const value = Number(price);
+            if (!Number.isFinite(value)) return '--';
+            return `${quoteCurrency(symbol).prefix}${value >= 100 ? value.toFixed(2) : value.toFixed(2)}`;
+        }
         const fallbackTickers = [
             { symbol: 'NVDA', description: 'NVIDIA Corp' },
             { symbol: 'AAPL', description: 'Apple Inc' },
@@ -436,7 +463,7 @@
             document.querySelectorAll('[data-i18n-value]').forEach(el => el.value = i18n[currentLang][el.getAttribute('data-i18n-value')]);
             document.getElementById('lang-toggle-text').textContent = currentLang === 'en' ? 'EN / 中文' : '中文 / EN';
         }
-        function toggleLang() { currentLang = currentLang === 'en' ? 'zh' : 'en'; renderLang(); updateDashboard(); }
+        function toggleLang() { currentLang = currentLang === 'en' ? 'zh' : 'en'; renderLang(); renderHotAssets(); updateDashboard(); }
 
         function apiCandidates(endpoint) {
             return LOCAL_API_BASE ? [endpoint, `${LOCAL_API_BASE}${endpoint}`] : [endpoint];
@@ -498,6 +525,18 @@
             return { heat: `${Math.round(heatScore)}/100 (${heatLvl})`, exp, risk, idx: Math.min(99.9, 70 + (hash%20) + (dp>0?dp:0)).toFixed(1) };
         }
 
+        function inferStockContext(symbol, name, profile = {}) {
+            const text = `${symbol} ${name || ''} ${profile.name || ''}`.toLowerCase();
+            if (/\.(sz|ss)$/.test(symbol.toLowerCase())) {
+                if (/kingdomway|金达威|vitamin|nutrition|co-a/.test(text)) return currentLang === 'zh' ? '中国A股 / 营养保健与生物科技' : 'China A-share / Nutrition & biotech';
+                if (/bank|银行/.test(text)) return currentLang === 'zh' ? '中国A股 / 银行金融' : 'China A-share / Banks';
+                if (/energy|power|solar|电|能源|光伏/.test(text)) return currentLang === 'zh' ? '中国A股 / 能源与电力' : 'China A-share / Energy & power';
+                if (/semiconductor|chip|半导体|芯片/.test(text)) return currentLang === 'zh' ? '中国A股 / 半导体与硬件' : 'China A-share / Semiconductors';
+                return currentLang === 'zh' ? '中国A股 / 消费、制造或医药链条' : 'China A-share / Consumer, manufacturing or healthcare chain';
+            }
+            return profile && profile.finnhubIndustry ? profile.finnhubIndustry : (currentLang === 'zh' ? '全球股票 / 行业待AI识别' : 'Global equity / AI sector inference');
+        }
+
         function buildPriceSeries(price, dp) {
             const base = Number(price) || 100;
             const drift = (Number(dp) || 0) / 100;
@@ -536,13 +575,13 @@
         }
 
         function renderRecommendationBars(rec) {
-            if (!rec) return `<p class="text-xs text-zinc-500 font-bold">No analyst rating data returned for this ticker.</p>`;
+            if (!rec) return `<p class="text-xs text-zinc-500 font-bold">${currentLang === 'zh' ? '该股票暂无分析师评级数据。' : 'No analyst rating data returned for this ticker.'}</p>`;
             const rows = [
-                ['Strong Buy', rec.strongBuy || 0, '#10b981'],
-                ['Buy', rec.buy || 0, '#22c55e'],
-                ['Hold', rec.hold || 0, '#f59e0b'],
-                ['Sell', rec.sell || 0, '#ef4444'],
-                ['Strong Sell', rec.strongSell || 0, '#991b1b']
+                [currentLang === 'zh' ? '强烈买入' : 'Strong Buy', rec.strongBuy || 0, '#10b981'],
+                [currentLang === 'zh' ? '买入' : 'Buy', rec.buy || 0, '#22c55e'],
+                [currentLang === 'zh' ? '持有' : 'Hold', rec.hold || 0, '#f59e0b'],
+                [currentLang === 'zh' ? '卖出' : 'Sell', rec.sell || 0, '#ef4444'],
+                [currentLang === 'zh' ? '强烈卖出' : 'Strong Sell', rec.strongSell || 0, '#991b1b']
             ];
             const total = rows.reduce((sum, r) => sum + r[1], 0) || 1;
             return rows.map(([label, value, color]) => `
@@ -558,6 +597,7 @@
         }
 
         function tradingViewSymbol(symbol) {
+            if (symbol === 'BINANCE:BTCUSDT' || symbol === 'BTC/USD') return 'BINANCE:BTCUSDT';
             if (symbol.endsWith('.AX')) return `ASX:${symbol.replace('.AX', '')}`;
             if (symbol.endsWith('.HK')) return `HKEX:${String(Number(symbol.replace('.HK', '')))}`;
             if (symbol.endsWith('.SS')) return `SSE:${symbol.replace('.SS', '')}`;
@@ -573,7 +613,7 @@
             const change = Number(dp) || 0;
             if (change >= 2) return { label: 'Buy', color: 'emerald', note: 'Positive price momentum' };
             if (change <= -2) return { label: 'Sell', color: 'red', note: 'Negative price momentum' };
-            return { label: 'Neutral', color: 'amber', note: 'Mixed short-term momentum' };
+            return { label: 'Hold', color: 'amber', note: 'Mixed short-term momentum' };
         }
 
         function renderTechnicalFallback(symbol, dp) {
@@ -581,23 +621,27 @@
             const label = document.getElementById('tv-technical-fallback-label');
             if (!box) return;
             const signal = localTechnicalSignal(dp);
-            if (label) label.textContent = signal.label;
+            const displayLabel = tradingSignalText(signal.label);
+            const note = currentLang === 'zh'
+                ? (signal.label === 'Buy' ? '价格动量偏强' : signal.label === 'Sell' ? '价格动量偏弱' : '短线动量混合')
+                : signal.note;
+            if (label) label.textContent = displayLabel;
             if (label) label.className = `text-xs font-black text-${signal.color}-400`;
             box.innerHTML = `
                 <div class="h-full flex flex-col justify-center p-4">
-                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-3">AI Trading Signal</p>
+                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-3">${currentLang === 'zh' ? 'AI 交易信号' : 'AI Trading Signal'}</p>
                     <div class="flex items-end justify-between gap-3">
                         <div>
-                            <p class="text-3xl font-black text-${signal.color}-400">${signal.label}</p>
-                            <p class="mt-1 text-xs text-zinc-500 font-bold">${signal.note}</p>
+                            <p class="text-3xl font-black text-${signal.color}-400">${displayLabel}</p>
+                            <p class="mt-1 text-xs text-zinc-500 font-bold">${note}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[10px] text-zinc-600 uppercase font-bold">Signal</p>
-                            <p class="text-xs text-zinc-400 font-black">Price momentum</p>
+                            <p class="text-[10px] text-zinc-600 uppercase font-bold">${currentLang === 'zh' ? '信号' : 'Signal'}</p>
+                            <p class="text-xs text-zinc-400 font-black">${currentLang === 'zh' ? '价格动量' : 'Price momentum'}</p>
                         </div>
                     </div>
                     <div class="mt-4 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                        <div class="h-full bg-${signal.color}-500 rounded-full" style="width:${signal.label === 'Neutral' ? 50 : signal.label === 'Buy' ? 72 : 28}%"></div>
+                        <div class="h-full bg-${signal.color}-500 rounded-full" style="width:${signal.label === 'Hold' ? 50 : signal.label === 'Buy' ? 72 : 28}%"></div>
                     </div>
                 </div>
             `;
@@ -617,6 +661,27 @@
             return null;
         }
 
+        function tradingSignalText(signalText) {
+            const normalized = String(signalText || '').toLowerCase();
+            const isBuy = normalized.includes('buy');
+            const isSell = normalized.includes('sell');
+            if (currentLang === 'zh') return isBuy ? '买入' : isSell ? '卖出' : '持有';
+            return isBuy ? 'Buy' : isSell ? 'Sell' : 'Hold';
+        }
+
+        function allocationBrief(remote, cards, prompt) {
+            const fallbackSummary = currentLang === 'zh'
+                ? '建议采用主题核心加风险缓冲的组合，不要一次性把资金全部压在单一热点。'
+                : 'Use a themed core plus a risk buffer instead of putting the full portfolio into one hot trade.';
+            const fallbackTrend = currentLang === 'zh'
+                ? '当前市场更偏向 AI 基建、能源电力和现金防守并存，适合分批进入并观察波动。'
+                : 'Current trend favors AI infrastructure, power demand, and some defensive cash while entering in stages.';
+            const summary = String(remote?.summary || '').trim() || fallbackSummary;
+            const trend = String(remote?.trend || '').trim() || fallbackTrend;
+            const top = cards?.[0]?.label ? ` ${currentLang === 'zh' ? '组合核心' : 'Core sleeve'}: ${cards[0].label}.` : '';
+            return { summary: summary + top, trend };
+        }
+
         function renderAITradingSignal(signal, fallbackDp = 0, symbol = '', name = '') {
             const box = document.getElementById('tv-technical-widget');
             const label = document.getElementById('tv-technical-fallback-label');
@@ -625,22 +690,23 @@
             const isBuy = normalized.includes('buy');
             const isSell = normalized.includes('sell');
             const color = isBuy ? 'emerald' : isSell ? 'red' : 'amber';
-            const text = isBuy ? 'Buy' : isSell ? 'Sell' : 'Hold';
+            const rawText = isBuy ? 'Buy' : isSell ? 'Sell' : 'Hold';
+            const text = tradingSignalText(rawText);
             const confidence = Math.max(0, Math.min(100, Number(signal?.confidence || 55)));
             const reason = signal?.reason || localTechnicalSignal(fallbackDp).note;
-            latestTradingSignal = { symbol, name, text, color, confidence, reason };
+            latestTradingSignal = { symbol, name, text, rawText, color, confidence, reason };
             if (label) label.textContent = text;
             if (label) label.className = `text-xs font-black text-${color}-400`;
             box.innerHTML = `
                 <div class="h-full flex flex-col justify-center p-4">
-                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-3">AI Trading Signal</p>
+                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-3">${currentLang === 'zh' ? 'AI 交易信号' : 'AI Trading Signal'}</p>
                     <div class="flex items-start justify-between gap-3 shrink-0">
                         <div>
                             <p class="text-3xl font-black text-${color}-400 leading-none">${text}</p>
-                            <p class="mt-1 text-[10px] text-zinc-500 font-bold uppercase tracking-wider">AI buy/sell view</p>
+                            <p class="mt-1 text-[10px] text-zinc-500 font-bold uppercase tracking-wider">${currentLang === 'zh' ? 'AI 买卖判断' : 'AI buy/sell view'}</p>
                         </div>
                         <div class="text-right shrink-0">
-                            <p class="text-[10px] text-zinc-600 uppercase font-bold">Confidence</p>
+                            <p class="text-[10px] text-zinc-600 uppercase font-bold">${currentLang === 'zh' ? '信心指数' : 'Confidence'}</p>
                             <p class="text-lg text-white font-black">${confidence}%</p>
                         </div>
                     </div>
@@ -711,6 +777,7 @@
                     </div>
                 `;
             }).join('');
+            renderHotAssets();
             updateDashboard();
         }
 
@@ -726,7 +793,116 @@
             } catch {
                 latestMarketScan = null;
             }
+            renderHotAssets();
             updateDashboard();
+        }
+
+        function hotAssetCandidates() {
+            const pulse = (latestMarketPulse || []).map(item => {
+                const q = item.quote;
+                const change = Number(q?.dp) || 0;
+                const isRiskAsset = /Nasdaq|Bitcoin|WTI|Gold/.test(item.label);
+                return {
+                    name: item.label,
+                    symbol: item.fallbackSymbol && !q ? item.fallbackSymbol : item.symbol,
+                    displaySymbol: item.displaySymbol || item.symbol,
+                    category: currentLang === 'zh' ? '宏观资产' : 'Macro asset',
+                    score: Math.round(58 + Math.min(28, Math.abs(change) * 5) + (isRiskAsset ? 5 : 0)),
+                    tag: q
+                        ? (currentLang === 'zh'
+                            ? `${change >= 0 ? '上涨' : '回落'} ${Math.abs(change).toFixed(2)}%`
+                            : `${change >= 0 ? 'Up' : 'Down'} ${Math.abs(change).toFixed(2)}%`)
+                        : (currentLang === 'zh' ? '等待行情' : 'Awaiting quote'),
+                    quote: q
+                };
+            });
+
+            const scanGroups = latestMarketScan?.groups || {};
+            const flattened = Object.values(scanGroups).flat().map(item => ({
+                name: item.name,
+                symbol: item.symbol,
+                displaySymbol: item.symbol,
+                category: currentLang === 'zh' ? hotAssetCategoryZh(item.groups || []) : hotAssetCategoryEn(item.groups || []),
+                score: Number(item.score) || 0,
+                tag: currentLang === 'zh' ? translateHotAssetTag(item.tag) : (item.tag || 'AI screen'),
+                quote: item.quote
+            }));
+
+            const unique = new Map();
+            [...flattened, ...pulse].forEach(item => {
+                if (!item.symbol) return;
+                const key = item.symbol.toUpperCase();
+                const existing = unique.get(key);
+                if (!existing || Number(item.score) > Number(existing.score)) unique.set(key, item);
+            });
+            return [...unique.values()]
+                .filter(item => item.score > 0)
+                .sort((a, b) => b.score - a.score)
+                .slice(0, 6);
+        }
+
+        function hotAssetCategoryEn(groups) {
+            if (groups.includes('crypto')) return 'Crypto';
+            if (groups.includes('commodity')) return 'Commodity';
+            if (groups.includes('index')) return 'Index / ETF';
+            if (groups.includes('aiHot')) return 'AI equity';
+            if (groups.includes('energyHot')) return 'Energy';
+            if (groups.includes('defensive')) return 'Defensive';
+            return 'Equity theme';
+        }
+
+        function hotAssetCategoryZh(groups) {
+            if (groups.includes('crypto')) return '虚拟货币';
+            if (groups.includes('commodity')) return '大宗商品';
+            if (groups.includes('index')) return '指数 / ETF';
+            if (groups.includes('aiHot')) return 'AI 股票';
+            if (groups.includes('energyHot')) return '能源资产';
+            if (groups.includes('defensive')) return '防御资产';
+            return '股票主题';
+        }
+
+        function translateHotAssetTag(tag = '') {
+            const text = String(tag);
+            if (/Momentum breakout/i.test(text)) return '动量突破';
+            if (/Positive price action/i.test(text)) return '价格走势偏强';
+            if (/Quality pullback/i.test(text)) return '优质资产回调观察';
+            if (/Income|defensive/i.test(text)) return '防御/收益属性';
+            if (/High-beta heat/i.test(text)) return '高弹性热度';
+            if (/Speculative watchlist/i.test(text)) return '爆发性观察名单';
+            if (/Cash|duration/i.test(text)) return '现金/久期缓冲';
+            if (/Live market screen/i.test(text)) return '实时市场筛选';
+            return text || 'AI 筛选';
+        }
+
+        function renderHotAssets() {
+            const container = document.getElementById('hot-assets-list');
+            if (!container) return;
+            const items = hotAssetCandidates();
+            if (!items.length) {
+                container.innerHTML = `<div class="text-xs text-zinc-500 font-bold">${currentLang === 'zh' ? '正在等待市场热度数据...' : 'Waiting for market heat data...'}</div>`;
+                return;
+            }
+            container.innerHTML = items.map(item => {
+                const q = item.quote;
+                const up = Number(q?.dp) >= 0;
+                const change = q ? `${up ? '+' : ''}${Number(q.dp).toFixed(2)}%` : `${item.score}/100`;
+                const changeColor = q ? (up ? 'text-emerald-400' : 'text-red-400') : 'text-blue-400';
+                const clickName = item.name || item.displaySymbol || item.symbol;
+                return `
+                    <button class="text-left rounded-xl border border-zinc-800 bg-[#09090b] px-3 py-2 hover:border-orange-400/50 hover:bg-zinc-900 transition-colors"
+                        onclick="openStockAnalysis('${escapeAttr(item.symbol)}', '${escapeAttr(clickName)}')">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-black text-white truncate">${escapeAttr(item.name)}</span>
+                            <span class="text-xs font-black ${changeColor}">${change}</span>
+                        </div>
+                        <div class="mt-1 flex items-center justify-between gap-2">
+                            <span class="text-[10px] text-zinc-500 font-bold truncate">${escapeAttr(item.displaySymbol || item.symbol)} · ${escapeAttr(item.category)}</span>
+                            <span class="text-[10px] text-orange-300 font-black">${Math.max(0, Math.min(100, Number(item.score) || 0))}/100</span>
+                        </div>
+                        <p class="mt-1 text-[10px] text-zinc-600 font-bold truncate">${escapeAttr(item.tag)}</p>
+                    </button>
+                `;
+            }).join('');
         }
 
         function marketScanPool(group) {
@@ -942,7 +1118,7 @@
             const dict = i18n[currentLang].metrics;
             
             modal.classList.replace('hidden', 'flex'); setTimeout(() => modal.classList.add('show'), 10);
-            body.innerHTML = `<div class="flex flex-col items-center py-10"><i class="ph ph-circle-notch animate-spin text-4xl text-blue-500 mb-4"></i><p class="text-xs font-bold text-zinc-500">Running AI Matrix Analysis...</p></div>`;
+            body.innerHTML = `<div class="flex flex-col items-center py-10"><i class="ph ph-circle-notch animate-spin text-4xl text-blue-500 mb-4"></i><p class="text-xs font-bold text-zinc-500">${currentLang === 'zh' ? 'AI 正在分析这只股票...' : 'Running AI Matrix Analysis...'}</p></div>`;
 
             const data = await fetchFullStockData(symbol);
             if(!data) { body.innerHTML = `<p class="text-red-500 font-bold text-center">Data connection failed for ${symbol}</p>`; return; }
@@ -953,10 +1129,22 @@
             const color = isUp ? 'emerald' : 'red';
             const quoteBadge = !hasQuote ? `<span class="ml-2 px-2 py-0.5 bg-zinc-800 text-zinc-500 text-[10px] rounded border border-zinc-700 uppercase tracking-widest">${currentLang==='zh'?'暂无实时报价':'Live quote unavailable'}</span>` : '';
             
-            const industry = data.profile && data.profile.finnhubIndustry ? data.profile.finnhubIndustry : (currentLang==='zh'?'未分类综合 / 全球市场':'Diversified / Global');
+            const marketMeta = quoteCurrency(symbol);
+            const industry = inferStockContext(symbol, name, data.profile || {});
             const buyRec = data.sentiment ? ((data.sentiment.strongBuy + data.sentiment.buy) / (data.sentiment.strongBuy + data.sentiment.buy + data.sentiment.hold + data.sentiment.sell + data.sentiment.strongSell) * 100).toFixed(0) : '--';
             const ratingText = buyRec > 70 ? (currentLang==='zh'?'强烈买入':'Strong Buy') : buyRec > 40 ? (currentLang==='zh'?'买入/持有':'Buy/Hold') : (currentLang==='zh'?'观望/待定':'Hold/Review');
             const tvSymbol = tradingViewSymbol(symbol);
+            const uiText = {
+                running: currentLang === 'zh' ? 'AI 正在分析...' : 'Running AI Matrix Analysis...',
+                priceTrace: currentLang === 'zh' ? '价格走势' : 'Live Price Trace',
+                noLiveQuote: currentLang === 'zh' ? '暂无实时价格' : 'No Live Quote',
+                priceVisible: currentLang === 'zh' ? '价格可在图表查看' : 'Price visible in chart',
+                analystRating: currentLang === 'zh' ? '分析师评级' : 'Analyst Rating',
+                noData: currentLang === 'zh' ? '暂无数据' : 'No Data',
+                buySide: currentLang === 'zh' ? '买方倾向' : 'Buy-side',
+                aiSignal: currentLang === 'zh' ? 'AI 交易信号' : 'AI Trading Signal',
+                live: currentLang === 'zh' ? '实时' : 'Live'
+            };
             
             const ai = generateAIMetrics(symbol, hasQuote ? q.dp : 0);
 
@@ -967,17 +1155,17 @@
                         <p class="text-sm font-bold text-zinc-400">${name} ${quoteBadge}</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-4xl font-black text-white mb-2" id="search-price">${hasQuote ? '$' + Number(q.c).toFixed(2) : 'TV Chart'}</p>
+                        <p class="text-4xl font-black text-white mb-2" id="search-price">${hasQuote ? formatQuotePrice(symbol, q.c) : 'TV Chart'}</p>
                         <div id="search-change" class="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-black bg-${color}-500/10 text-${color}-400">
-                            ${hasQuote ? `<i class="ph ${isUp ? 'ph-trend-up' : 'ph-trend-down'}"></i> ${Number(q.dp).toFixed(2)}%` : '<i class="ph ph-chart-line-up"></i> Price visible in chart'}
+                            ${hasQuote ? `<i class="ph ${isUp ? 'ph-trend-up' : 'ph-trend-down'}"></i> ${Number(q.dp).toFixed(2)}%` : `<i class="ph ph-chart-line-up"></i> ${uiText.priceVisible}`}
                         </div>
                     </div>
                 </div>
 
                 <div class="mb-5 h-24 rounded-2xl border border-zinc-800 bg-[#09090b] p-3">
                     <div class="mb-2 flex items-center justify-between">
-                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Live Price Trace</p>
-                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${hasQuote ? data.quoteSource : 'No Live Quote'}</p>
+                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${uiText.priceTrace}</p>
+                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${hasQuote ? data.quoteSource : uiText.noLiveQuote}</p>
                     </div>
                     <div class="h-14"><canvas id="stock-price-chart"></canvas></div>
                 </div>
@@ -985,15 +1173,15 @@
                 <div class="mb-5 grid gap-3 md:grid-cols-2">
                     <div class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4">
                         <div class="flex items-center justify-between mb-3">
-                            <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Analyst Rating</p>
-                            <p class="text-xs font-black text-blue-400">${buyRec !== '--' ? buyRec + '% Buy-side' : 'No Data'}</p>
+                            <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${uiText.analystRating}</p>
+                            <p class="text-xs font-black text-blue-400">${buyRec !== '--' ? buyRec + '% ' + uiText.buySide : uiText.noData}</p>
                         </div>
                         <div class="space-y-2">${renderRecommendationBars(data.sentiment)}</div>
                     </div>
                     <div class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4">
                         <div class="flex items-center justify-between mb-3">
-                            <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">AI Trading Signal</p>
-                            <p id="tv-technical-fallback-label" class="text-xs font-black text-zinc-500">Live</p>
+                            <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${uiText.aiSignal}</p>
+                            <p id="tv-technical-fallback-label" class="text-xs font-black text-zinc-500">${uiText.live}</p>
                         </div>
                         <div id="tv-technical-widget" class="relative h-44 rounded-xl border border-zinc-800 overflow-hidden bg-[#050506]"></div>
                     </div>
@@ -1035,6 +1223,8 @@
                 changePercent: hasQuote ? Number(q.dp) : null,
                 quoteAvailable: hasQuote,
                 quoteSource: data.quoteSource,
+                market: marketMeta.market,
+                currency: marketMeta.currency,
                 industry,
                 analystBuyPercent: buyRec !== '--' ? Number(buyRec) : null,
                 ratingText,
@@ -1054,7 +1244,7 @@
                 if (!fresh.quoteAvailable || fq.c === null || fq.c === undefined) return;
                 const freshUp = Number(fq.dp) >= 0;
                 const freshColor = freshUp ? 'emerald' : 'red';
-                document.getElementById('search-price').textContent = `$${Number(fq.c).toFixed(2)}`;
+                document.getElementById('search-price').textContent = formatQuotePrice(symbol, fq.c);
                 document.getElementById('search-change').className = `inline-flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-black bg-${freshColor}-500/10 text-${freshColor}-400`;
                 document.getElementById('search-change').innerHTML = `<i class="ph ${freshUp ? 'ph-trend-up' : 'ph-trend-down'}"></i> ${Number(fq.dp).toFixed(2)}%`;
                 renderStockSparkline(symbol, fq);
@@ -1243,8 +1433,8 @@
             const confidence = document.getElementById('signal-modal-confidence');
             const reason = document.getElementById('signal-modal-reason');
             const colorClass = latestTradingSignal.color === 'emerald' ? 'text-emerald-400' : latestTradingSignal.color === 'red' ? 'text-red-400' : 'text-amber-400';
-            symbol.textContent = [latestTradingSignal.symbol, latestTradingSignal.name].filter(Boolean).join(' · ') || 'AI Signal';
-            action.textContent = latestTradingSignal.text;
+            symbol.textContent = [latestTradingSignal.symbol, latestTradingSignal.name].filter(Boolean).join(' · ') || (currentLang === 'zh' ? 'AI 信号' : 'AI Signal');
+            action.textContent = tradingSignalText(latestTradingSignal.rawText || latestTradingSignal.text);
             action.className = `text-4xl font-black ${colorClass}`;
             confidence.textContent = `${latestTradingSignal.confidence}%`;
             confidence.className = `text-2xl font-black ${colorClass}`;
@@ -1262,20 +1452,28 @@
             const prompt = document.getElementById('allocation-prompt').value.trim();
             const output = document.getElementById('ai-allocation-output');
             output.classList.remove('hidden');
-            output.innerHTML = `<div class="md:col-span-3 p-4 bg-[#09090b] border border-zinc-800 rounded-xl text-sm text-zinc-400"><i class="ph ph-circle-notch animate-spin text-blue-400 mr-2"></i>Contacting portfolio agent...</div>`;
+            output.innerHTML = `<div class="md:col-span-3 p-4 bg-[#09090b] border border-zinc-800 rounded-xl text-sm text-zinc-400"><i class="ph ph-circle-notch animate-spin text-blue-400 mr-2"></i>${currentLang === 'zh' ? 'AI 正在生成配置和趋势建议...' : 'AI is building allocation and trend view...'}</div>`;
 
             const remote = await callJsonEndpoint(OPENAI_ALLOCATION_ENDPOINT, {
                 prompt,
                 amount: Number(document.getElementById('amount-input').value) || 0,
-                currentRisk
+                currentRisk,
+                lang: currentLang
             });
             const warning = remote?.error ? `
                 <div class="md:col-span-3 p-3 bg-orange-500/10 border border-orange-500/20 rounded-xl text-xs font-bold text-orange-300">
-                    AI allocation is connected, but the service currently has no usable quota/billing. Showing a local example allocation.
+                    ${currentLang === 'zh' ? 'AI allocation 已连接，但当前服务额度不可用，先显示本地示例配置。' : 'AI allocation is connected, but the service currently has no usable quota/billing. Showing a local example allocation.'}
                 </div>
             ` : '';
             const cards = normalizeAllocationCards(remote?.allocations, prompt);
-            output.innerHTML = warning + cards.map(card => `
+            const brief = allocationBrief(remote, cards, prompt);
+            const briefHtml = `
+                <div class="md:col-span-3 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                    <p class="text-sm font-black text-white leading-relaxed">${escapeAttr(brief.summary)}</p>
+                    <p class="mt-2 text-xs text-blue-200/80 font-semibold leading-relaxed">${escapeAttr(brief.trend)}</p>
+                </div>
+            `;
+            output.innerHTML = warning + briefHtml + cards.map(card => `
                 <div class="p-4 bg-[#09090b] border border-zinc-800 rounded-xl hover:border-blue-500/50 transition-colors">
                     <div class="flex items-center justify-between mb-2">
                         <p class="text-sm font-black text-white">${escapeAttr(card.label)}</p>

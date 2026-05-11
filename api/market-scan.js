@@ -1,4 +1,4 @@
-const { fetchTwelveQuote, sendJson } = require('./_utils');
+const { fetchTwelveQuote, fetchYahooQuote, sendJson } = require('./_utils');
 
 const scanUniverse = [
   { name: 'NVIDIA Corp', symbol: 'NVDA', groups: ['aiHot', 'quality'] },
@@ -36,7 +36,13 @@ const scanUniverse = [
   { name: 'First Trust Nasdaq Clean Edge Smart Grid', symbol: 'GRID', groups: ['infrastructure'] },
   { name: 'Taiwan Semi', symbol: 'TSM', groups: ['quality'] },
   { name: 'Broadcom', symbol: 'AVGO', groups: ['quality'] },
-  { name: 'VanEck Semiconductor ETF', symbol: 'SMH', groups: ['quality'] }
+  { name: 'VanEck Semiconductor ETF', symbol: 'SMH', groups: ['quality'] },
+  { name: 'Nasdaq 100 ETF', symbol: 'QQQ', groups: ['index', 'aiHot'] },
+  { name: 'S&P 500 ETF', symbol: 'SPY', groups: ['index', 'quality'] },
+  { name: 'Gold ETF', symbol: 'GLD', groups: ['commodity', 'defensive'] },
+  { name: 'WTI Oil Fund', symbol: 'USO', groups: ['commodity', 'energyHot'] },
+  { name: 'US Dollar Bull ETF', symbol: 'UUP', groups: ['commodity', 'defensive'] },
+  { name: 'Bitcoin', symbol: 'BINANCE:BTCUSDT', groups: ['crypto', 'smallCapExplosive'] }
 ];
 
 function scoreScanItem(item, quote) {
@@ -66,7 +72,7 @@ module.exports = async function handler(req, res) {
   try {
     const items = await Promise.all(scanUniverse.map(async item => {
       try {
-        const quote = await fetchTwelveQuote(item.symbol);
+        const quote = await fetchTwelveQuote(item.symbol) || await fetchYahooQuote(item.symbol);
         const score = quote ? scoreScanItem(item, quote) : 0;
         return {
           ...item,

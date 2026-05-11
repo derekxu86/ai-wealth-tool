@@ -7,14 +7,17 @@ module.exports = async function handler(req, res) {
     const prompt = String(body.prompt || '').slice(0, 1200);
     const amount = Number(body.amount || 0);
     const currentRisk = String(body.currentRisk || 'moderate');
+    const lang = String(body.lang || '').toLowerCase().startsWith('zh') ? 'Chinese' : 'English';
     const payload = await callOpenAIJson({
       name: 'portfolio_allocation',
       system: 'You are an AI wealth strategist. Return concise portfolio allocation JSON only. This is educational, not financial advice.',
-      user: `Capital: ${amount}. Current risk profile: ${currentRisk}. User request: ${prompt}. Return JSON with exactly 3 allocations: {label, weight, note, holdings}. holdings should contain 2-3 investable tickers as {symbol, name}. Weights should be integers and sum to around 100. Treat this as a global-user product: do not recommend Australian equities just because capital currency is AUD or because the user wants diversification away from US stocks. Only include Australia/ASX exposure when the user explicitly asks for Australian stocks, ASX, Australia equities, 澳股, 澳洲股票, or 澳大利亚股票.`,
+      user: `Language: ${lang}. Capital: ${amount}. Current risk profile: ${currentRisk}. User request: ${prompt}. Return JSON with {summary, trend, allocations}. summary is one short investment suggestion sentence. trend is one short current market trend sentence. allocations must contain exactly 3 items: {label, weight, note, holdings}. holdings should contain 2-3 investable tickers as {symbol, name}. Weights should be integers and sum to around 100. Treat this as a global-user product: do not recommend Australian equities just because capital currency is AUD or because the user wants diversification away from US stocks. Only include Australia/ASX exposure when the user explicitly asks for Australian stocks, ASX, Australia equities, 澳股, 澳洲股票, or 澳大利亚股票.`,
       schema: {
         type: 'object',
         additionalProperties: false,
         properties: {
+          summary: { type: 'string' },
+          trend: { type: 'string' },
           allocations: {
             type: 'array',
             minItems: 3,
@@ -45,7 +48,7 @@ module.exports = async function handler(req, res) {
             }
           }
         },
-        required: ['allocations']
+        required: ['summary', 'trend', 'allocations']
       }
     });
     return sendJson(res, 200, payload);
