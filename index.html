@@ -107,6 +107,9 @@
                         <button id="mode-global-btn" onclick="setMarketMode('global')" class="px-3 py-1 rounded-full text-[10px] font-black bg-blue-500 text-white">全球</button>
                         <button id="mode-ashare-btn" onclick="setMarketMode('ashare')" class="px-3 py-1 rounded-full text-[10px] font-black text-zinc-500 hover:text-white">A股</button>
                     </div>
+                    <button onclick="runAIChartAdjustment()" class="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-black text-emerald-300 hover:bg-emerald-500/20 transition-colors">
+                        <i class="ph ph-sparkle"></i><span data-i18n="aiAdjust">AI Adjust</span>
+                    </button>
                 </div>
                 <span class="text-[10px] text-zinc-600 flex items-center gap-1 font-bold"><i class="ph ph-arrows-clockwise"></i> <span data-i18n="updates">Auto-sync</span></span>
             </div>
@@ -136,29 +139,6 @@
         </div>
     </div>
 
-    <div id="hot-assets-panel" class="max-w-5xl w-full bg-[#18181b] border border-zinc-800/70 rounded-2xl p-3 sm:p-4 mb-4">
-        <div class="flex items-center justify-between gap-3 mb-3">
-            <div>
-                <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest" data-i18n="hotAssets">Hot Assets</p>
-                <p class="text-[10px] text-zinc-600 font-bold mt-1" data-i18n="hotAssetsSub">Market heat + AI screen</p>
-            </div>
-            <i class="ph ph-fire text-orange-400 text-lg"></i>
-        </div>
-        <div id="hot-assets-list" class="grid grid-cols-2 md:grid-cols-6 gap-2">
-            <div class="text-xs text-zinc-500 font-bold" data-i18n="loading">Loading...</div>
-        </div>
-        <div id="a-share-theme-row" class="hidden mt-3 border-t border-zinc-800 pt-3">
-            <div class="flex items-center justify-between gap-2 mb-2">
-                <p class="text-[10px] text-zinc-500 font-black uppercase tracking-widest">A股题材热度</p>
-                <div class="flex items-center gap-2">
-                    <button onclick="scrollAssetRow('a-share-theme-list', -1)" class="w-7 h-7 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-emerald-400/50"><i class="ph ph-caret-left"></i></button>
-                    <button onclick="scrollAssetRow('a-share-theme-list', 1)" class="w-7 h-7 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-emerald-400/50"><i class="ph ph-caret-right"></i></button>
-                </div>
-            </div>
-            <div id="a-share-theme-list" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
-        </div>
-    </div>
-
     <div class="max-w-5xl w-full bg-[#18181b] border border-zinc-800 p-3 sm:p-4 rounded-2xl mb-4">
         <div class="flex flex-col gap-3 md:flex-row md:items-end">
             <div class="flex-1">
@@ -182,14 +162,35 @@
         </div>
     </div>
 
-    <div class="max-w-5xl w-full mt-4 bg-[#18181b] border border-zinc-800 px-3 sm:px-4 py-3 rounded-2xl">
-        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-            <span class="flex-shrink-0 text-[10px] font-black bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20 uppercase tracking-widest">Market Pulse</span>
-            <div id="market-pulse-content" class="flex flex-1 gap-2 text-xs overflow-x-auto no-scrollbar sm:grid sm:grid-cols-4 lg:grid-cols-7">
-                <div class="text-zinc-500 font-bold">Loading...</div>
+    <div id="hot-assets-panel" class="max-w-5xl w-full mt-4 bg-[#18181b] border border-zinc-800/70 rounded-2xl p-3 sm:p-4 mb-4">
+        <div class="flex items-center justify-between gap-3 mb-3">
+            <div class="flex items-center gap-3">
+                <span class="flex-shrink-0 text-[10px] font-black bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20 uppercase tracking-widest" data-i18n="hotAssets">AI Picks</span>
+                <div>
+                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest" data-i18n="hotAssetsTitle">AI Recommended Hot Stocks / Assets</p>
+                    <p class="text-[10px] text-zinc-600 font-bold mt-1" data-i18n="hotAssetsSub">Premium market heat screen</p>
+                </div>
             </div>
+            <i class="ph ph-fire text-emerald-400 text-lg"></i>
+        </div>
+        <div id="hot-assets-list" class="grid grid-cols-2 md:grid-cols-6 gap-2">
+            <div class="text-xs text-zinc-500 font-bold" data-i18n="loading">Loading...</div>
+        </div>
+        <div id="a-share-theme-row" class="hidden mt-3 border-t border-zinc-800 pt-3">
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <p class="text-[10px] text-zinc-500 font-black uppercase tracking-widest">A股热门板块</p>
+                <div class="flex items-center gap-2">
+                    <button onclick="scrollAssetRow('a-share-theme-list', -1)" class="w-7 h-7 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-emerald-400/50"><i class="ph ph-caret-left"></i></button>
+                    <button onclick="scrollAssetRow('a-share-theme-list', 1)" class="w-7 h-7 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-emerald-400/50"><i class="ph ph-caret-right"></i></button>
+                </div>
+            </div>
+            <div id="a-share-theme-list" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
         </div>
     </div>
+
+    <p class="max-w-5xl w-full mb-4 text-[10px] text-zinc-600 leading-relaxed px-2">
+        投资有风险，入市需谨慎。本产品仅用于市场研究和教育演示，不构成任何投资建议；数据可能延迟或不完整。
+    </p>
 
     <div id="drilldown-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-md p-4">
         <div class="modal-content w-full max-w-lg bg-[#18181b] rounded-2xl border border-zinc-700 shadow-2xl flex flex-col max-h-[90vh]">
@@ -328,7 +329,7 @@
                 aiAnalysis: "AI Asset Analysis", impactedTickers: "Impacted Industries & Tickers",
                 marketInsight: "Market Insight", newsSummaryLabel: "AI Executive Summary",
                 aiTradingSignal: "AI Trading Analysis", confidence: "Confidence", aiSignalAnalysis: "AI Analysis",
-                hotAssets: "Hot Assets", hotAssetsSub: "Market heat + AI screen", loading: "Loading...",
+                hotAssets: "AI PICKS", hotAssetsTitle: "AI Recommended Hot Stocks / Assets", hotAssetsSub: "Premium market heat screen", aiAdjust: "AI Adjust", loading: "Loading...",
                 memberTitle: "Member Access", memberHeadline: "Unlock premium decision analysis",
                 memberCopy: "Free users can view market prices, charts, news headlines and basic data. Premium members unlock AI allocation, news analysis and trading signal reasoning.",
                 monthlyPlan: "Monthly", annualPlan: "Annual", annualSave: "Save 20%", freeSignin: "Continue as free user", billingNote: "Demo billing state only. Connect Stripe plus Supabase/Firebase before accepting real payments.",
@@ -347,7 +348,7 @@
                 aiAnalysis: "AI 多维标的分析", impactedTickers: "受影响行业与相关股票",
                 marketInsight: "市场洞察", newsSummaryLabel: "AI 深度摘要",
                 aiTradingSignal: "AI 交易分析", confidence: "信心指数", aiSignalAnalysis: "AI 分析",
-                hotAssets: "热门投资资产", hotAssetsSub: "市场热度 + AI 筛选", loading: "加载中...",
+                hotAssets: "AI 推荐", hotAssetsTitle: "AI 推荐近期热股 / 热门资产", hotAssetsSub: "会员解锁市场热度筛选", aiAdjust: "AI 调整", loading: "加载中...",
                 memberTitle: "会员权限", memberHeadline: "解锁高级决策分析",
                 memberCopy: "普通用户可以查看价格、图表、新闻标题和基础数据。会员可以使用 AI 配置、新闻解析和交易信号推理。",
                 monthlyPlan: "月付会员", annualPlan: "年付会员", annualSave: "省 20%", freeSignin: "以普通用户继续", billingNote: "当前是演示会员状态。正式收款前需要接 Stripe 和 Supabase/Firebase。",
@@ -465,7 +466,7 @@
             ]
         };
 
-        let currentRisk = 'moderate', currentMarketMode = 'global', chartInstance = null, stockChartInstance = null, stockChartTimer = null;
+        let currentRisk = 'moderate', currentMarketMode = 'global', aiAdjustedStrategy = null, chartInstance = null, stockChartInstance = null, stockChartTimer = null;
         let latestMarketPulse = [];
         let latestMarketScan = null;
         let latestAshareThemes = [];
@@ -558,6 +559,7 @@
 
         window.setMarketMode = function(mode) {
             currentMarketMode = mode === 'ashare' && currentLang === 'zh' ? 'ashare' : 'global';
+            aiAdjustedStrategy = null;
             syncMarketModeButtons();
             updateDashboard();
         };
@@ -1131,21 +1133,25 @@
             const r = report || localInvestmentCommittee({});
             const title = currentLang === 'zh' ? 'AI 投研委员会' : 'AI Investment Committee';
             const items = [
-                [currentLang === 'zh' ? '技术面' : 'Technical', r.technical],
-                [currentLang === 'zh' ? '新闻面' : 'News', r.news],
-                [currentLang === 'zh' ? '基本面' : 'Fundamental', r.fundamental],
-                [currentLang === 'zh' ? '风控' : 'Risk', r.risk],
-                [currentLang === 'zh' ? '多头观点' : 'Bull Case', r.bull],
-                [currentLang === 'zh' ? '空头观点' : 'Bear Case', r.bear]
+                [currentLang === 'zh' ? '技术面' : 'Technical', cleanAIText(r.technical, 220)],
+                [currentLang === 'zh' ? '新闻面' : 'News', cleanAIText(r.news, 220)],
+                [currentLang === 'zh' ? '基本面' : 'Fundamental', cleanAIText(r.fundamental, 220)],
+                [currentLang === 'zh' ? '风控' : 'Risk', cleanAIText(r.risk, 220)],
+                [currentLang === 'zh' ? '多头观点' : 'Bull Case', cleanAIText(r.bull, 220)],
+                [currentLang === 'zh' ? '空头观点' : 'Bear Case', cleanAIText(r.bear, 220)]
             ];
+            const checkpoints = (Array.isArray(r.checkpoints) ? r.checkpoints : [])
+                .map(item => cleanAIText(item, 80))
+                .filter(item => item && item !== '--')
+                .slice(0, 4);
             return `
                 <div class="rounded-xl border border-zinc-800 bg-[#050506] p-4 md:col-span-2">
                     <div class="flex items-start justify-between gap-3 mb-3">
                         <div>
                             <p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest">${title}</p>
-                            <p class="mt-1 text-xs text-zinc-400 font-bold">${escapeAttr(r.conclusion || '')}</p>
+                            <p class="mt-1 text-xs text-zinc-400 font-bold">${escapeAttr(cleanAIText(r.conclusion, 220))}</p>
                         </div>
-                        <span class="shrink-0 px-2 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 text-[10px] font-black">${escapeAttr(r.rating)} · ${Math.round(Number(r.score) || 0)}/100</span>
+                        <span class="shrink-0 px-2 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 text-[10px] font-black">${escapeAttr(cleanAIText(r.rating, 32))} · ${Math.round(Number(r.score) || 0)}/100</span>
                     </div>
                     <div class="grid gap-2 sm:grid-cols-2">
                         ${items.map(([label, text]) => `
@@ -1158,7 +1164,7 @@
                     <div class="mt-3 rounded-lg border border-zinc-800/80 bg-[#09090b] p-3">
                         <p class="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '验证点' : 'Validation Checkpoints'}</p>
                         <div class="flex flex-wrap gap-2">
-                            ${(r.checkpoints || []).map(item => `<span class="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-300 font-bold">${escapeAttr(item)}</span>`).join('')}
+                            ${checkpoints.map(item => `<span class="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px] text-zinc-300 font-bold">${escapeAttr(item)}</span>`).join('')}
                         </div>
                     </div>
                 </div>
@@ -1448,9 +1454,13 @@
 
         async function renderMarketPulse() {
             const container = document.getElementById('market-pulse-content');
-            if (!container) return;
             const results = await Promise.all(marketPulseItems.map(async item => ({ ...item, quote: await fetchMarketPulseQuote(item) })));
             latestMarketPulse = results;
+            if (!container) {
+                renderHotAssets();
+                updateDashboard();
+                return;
+            }
             container.innerHTML = results.map(item => {
                 const q = item.quote;
                 const up = q && Number(q.dp) >= 0;
@@ -1566,6 +1576,10 @@
         function renderHotAssets() {
             const container = document.getElementById('hot-assets-list');
             if (!container) return;
+            if (!isPremiumMember()) {
+                container.innerHTML = `<div class="col-span-2 md:col-span-6">${premiumGateHtml('analysis')}</div>`;
+                return;
+            }
             const items = hotAssetCandidates();
             if (!items.length) {
                 container.innerHTML = `<div class="text-xs text-zinc-500 font-bold">${currentLang === 'zh' ? '正在等待市场热度数据...' : 'Waiting for market heat data...'}</div>`;
@@ -1598,7 +1612,7 @@
             const row = document.getElementById('a-share-theme-row');
             const list = document.getElementById('a-share-theme-list');
             if (!row || !list) return;
-            if (currentLang !== 'zh' || !latestAshareThemes.length) {
+            if (currentLang !== 'zh' || !isPremiumMember() || !latestAshareThemes.length) {
                 row.classList.add('hidden');
                 list.innerHTML = '';
                 return;
@@ -1829,6 +1843,19 @@
         let currentSearchResults = [];
         function escapeAttr(value) {
             return String(value || '').replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function cleanAIText(value, maxLen = 260) {
+            let text = String(value || '')
+                .replace(/```[\s\S]*?```/g, '')
+                .replace(/\bjson\b/gi, '')
+                .replace(/[{}\[\]]/g, '')
+                .replace(/["'`]+/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+            text = text.replace(/[,，:：;；.。]*\s*$/g, '');
+            if (text.length > maxLen) text = `${text.slice(0, maxLen - 1).trim()}…`;
+            return text || '--';
         }
         function localSearch(query) {
             const q = query.toUpperCase();
@@ -2195,6 +2222,7 @@
 
         // --- 核心更新与图表点击联动 (Drill-down) ---
         function activeStrategyBundle() {
+            if (aiAdjustedStrategy) return aiAdjustedStrategy;
             if (currentMarketMode === 'ashare' && currentLang === 'zh') {
                 return {
                     strategy: ashareStrategiesData[currentRisk],
@@ -2203,6 +2231,50 @@
             }
             return dynamicStrategy(strategiesData[currentRisk]);
         }
+
+        function strategyFromAllocationCards(cards, prompt) {
+            const colors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'];
+            const total = cards.reduce((sum, card) => sum + (Number(card.weight) || 0), 0) || 100;
+            return {
+                strategy: {
+                    rate: currentRisk === 'aggressive' ? 0.12 : currentRisk === 'conservative' ? 0.055 : 0.085,
+                    assets: cards.map((card, index) => {
+                        const holdings = card.holdings?.length ? card.holdings : inferHoldings(card.label, prompt);
+                        return {
+                            id: card.label,
+                            w: (Number(card.weight) || 0) / total,
+                            c: colors[index % colors.length],
+                            subs: holdings.slice(0, 3).map(h => ({
+                                symbol: h.symbol,
+                                name: h.name || h.symbol,
+                                share: 1 / Math.min(3, holdings.length || 1),
+                                tag: currentLang === 'zh' ? 'AI 配置委员会推荐' : 'AI allocation committee'
+                            }))
+                        };
+                    })
+                },
+                note: currentLang === 'zh'
+                    ? '已应用 AI 调整：饼图根据配置委员会推荐更新。该结果仅供研究参考，可继续用 AI Allocation 查看完整理由。'
+                    : 'AI adjustment applied: chart updated from allocation committee output. For research use only.'
+            };
+        }
+
+        window.runAIChartAdjustment = async function() {
+            if (!isPremiumMember()) { openMembershipModal(); return; }
+            const prompt = document.getElementById('allocation-prompt')?.value?.trim() || (currentLang === 'zh' ? '我有2万块，风险偏高，想投 AI 和能源' : 'I have 20000, high risk, interested in AI and energy');
+            const note = document.getElementById('dynamic-strategy-note');
+            note.textContent = currentLang === 'zh' ? 'AI 配置委员会正在调整饼图...' : 'AI allocation committee is adjusting the chart...';
+            note.classList.remove('hidden');
+            const remote = await callJsonEndpoint(OPENAI_ALLOCATION_ENDPOINT, {
+                prompt,
+                amount: Number(document.getElementById('amount-input').value) || 0,
+                currentRisk,
+                lang: currentLang
+            });
+            const cards = normalizeAllocationCards(remote?.allocations, prompt);
+            aiAdjustedStrategy = strategyFromAllocationCards(cards, prompt);
+            updateDashboard();
+        };
 
         function updateDashboard() {
             const amount = parseFloat(document.getElementById('amount-input').value) || 0;
@@ -2344,7 +2416,7 @@
                 `;
                 return;
             }
-            output.innerHTML = `<div class="md:col-span-3 p-4 bg-[#09090b] border border-zinc-800 rounded-xl text-sm text-zinc-400"><i class="ph ph-circle-notch animate-spin text-blue-400 mr-2"></i>${currentLang === 'zh' ? 'AI 正在生成配置和趋势建议...' : 'AI is building allocation and trend view...'}</div>`;
+            output.innerHTML = `<div class="md:col-span-3 p-4 bg-[#09090b] border border-zinc-800 rounded-xl text-sm text-zinc-400"><i class="ph ph-circle-notch animate-spin text-blue-400 mr-2"></i>${currentLang === 'zh' ? '配置委员会正在生成组合建议...' : 'Portfolio committee is building the allocation...'}</div>`;
 
             const remote = await callJsonEndpoint(OPENAI_ALLOCATION_ENDPOINT, {
                 prompt,
@@ -2361,11 +2433,12 @@
             const brief = allocationBrief(remote, cards, prompt);
             const briefHtml = `
                 <div class="md:col-span-3 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-                    <p class="text-sm font-black text-white leading-relaxed">${escapeAttr(brief.summary)}</p>
-                    <p class="mt-2 text-xs text-blue-200/80 font-semibold leading-relaxed">${escapeAttr(brief.trend)}</p>
+                    <p class="text-sm font-black text-white leading-relaxed">${escapeAttr(cleanAIText(brief.summary, 220))}</p>
+                    <p class="mt-2 text-xs text-blue-200/80 font-semibold leading-relaxed">${escapeAttr(cleanAIText(brief.trend, 260))}</p>
                 </div>
             `;
-            output.innerHTML = warning + briefHtml + cards.map(card => `
+            const committeeHtml = renderAllocationCommittee(remote?.committee, prompt);
+            output.innerHTML = warning + briefHtml + committeeHtml + cards.map(card => `
                 <div class="p-4 bg-[#09090b] border border-zinc-800 rounded-xl hover:border-blue-500/50 transition-colors">
                     <div class="flex items-center justify-between mb-2">
                         <p class="text-sm font-black text-white">${escapeAttr(card.label)}</p>
@@ -2382,6 +2455,56 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        function renderAllocationCommittee(committee, prompt) {
+            const c = committee || localAllocationCommittee(prompt);
+            const items = [
+                [currentLang === 'zh' ? '宏观判断' : 'Macro', c.macro],
+                [currentLang === 'zh' ? '机会来源' : 'Opportunity', c.opportunity],
+                [currentLang === 'zh' ? '风险控制' : 'Risk', c.risk],
+                [currentLang === 'zh' ? '多头观点' : 'Bull Case', c.bull],
+                [currentLang === 'zh' ? '空头观点' : 'Bear Case', c.bear],
+                [currentLang === 'zh' ? '最终拍板' : 'Final View', c.final]
+            ];
+            return `
+                <div class="md:col-span-3 rounded-xl border border-zinc-800 bg-[#09090b] p-4">
+                    <p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest mb-3">${currentLang === 'zh' ? 'AI 配置委员会' : 'AI Allocation Committee'}</p>
+                    <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        ${items.map(([label, text]) => `
+                            <div class="rounded-lg border border-zinc-800 bg-[#050506] p-3">
+                                <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-1">${escapeAttr(label)}</p>
+                                <p class="text-xs text-zinc-300 font-semibold leading-relaxed">${escapeAttr(cleanAIText(text, 180))}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function localAllocationCommittee(prompt) {
+            const text = String(prompt || '').toLowerCase();
+            const wantsAI = /ai|人工智能|算力|半导体|芯片/.test(text);
+            const wantsEnergy = /能源|energy|oil|电力|新能源/.test(text);
+            const highRisk = /风险偏高|高风险|aggressive|high risk/.test(text);
+            if (currentLang === 'zh') {
+                return {
+                    macro: highRisk ? '风险偏好较高，但仍需要用现金或低波动资产控制回撤。' : '当前更适合核心资产加防守缓冲，避免单一主题过度集中。',
+                    opportunity: wantsAI && wantsEnergy ? '机会主要来自 AI 基建、电力需求和能源链条的共振。' : wantsAI ? '机会主要来自 AI 基建、半导体和软件生产力扩散。' : wantsEnergy ? '机会主要来自能源价格、电力基础设施和现金流资产。' : '机会来自全球分散配置和高质量资产的再平衡。',
+                    risk: '主要风险是高估值回撤、利率重新定价、主题拥挤交易和单一市场暴露过高。',
+                    bull: '多头认为产业趋势仍在，分批配置能参与长期成长，同时降低择时压力。',
+                    bear: '空头担心热门主题已反映过多预期，若盈利验证不足，回撤会被放大。',
+                    final: '最终建议采用主题核心加风险缓冲，不一次性满仓，后续根据趋势确认再加仓。'
+                };
+            }
+            return {
+                macro: highRisk ? 'Risk appetite is high, but drawdown control still needs cash or low-volatility ballast.' : 'A core-plus-buffer allocation is preferable to a single-theme portfolio.',
+                opportunity: wantsAI && wantsEnergy ? 'Opportunity is concentrated in AI infrastructure, power demand and energy supply chains.' : wantsAI ? 'Opportunity is led by AI infrastructure, semiconductors and software productivity.' : wantsEnergy ? 'Opportunity is tied to energy prices, power infrastructure and cash-flow assets.' : 'Opportunity comes from diversified global exposure and quality rebalancing.',
+                risk: 'Key risks are valuation compression, rate repricing, crowded themes and excessive single-market exposure.',
+                bull: 'The bull case is that secular trends remain intact and staged entries reduce timing pressure.',
+                bear: 'The bear case is that hot themes already price in too much optimism and earnings validation may lag.',
+                final: 'Use a thematic core plus risk buffer; avoid full deployment at once and add only after trend confirmation.'
+            };
         }
 
         function normalizeAllocationCards(allocations, prompt) {

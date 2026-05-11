@@ -55,6 +55,31 @@ async function fetchFinnhub(path, params = {}) {
   return response.json();
 }
 
+async function fetchAlphaVantage(params = {}) {
+  const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
+  if (!apiKey) return null;
+  const url = new URL('https://www.alphavantage.co/query');
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null) url.searchParams.set(key, value);
+  }
+  url.searchParams.set('apikey', apiKey);
+  const response = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0' } });
+  if (!response.ok) return null;
+  const data = await response.json();
+  if (data?.Note || data?.Information || data?.['Error Message']) return null;
+  return data;
+}
+
+async function fetchAlphaNewsSentiment(symbol) {
+  const data = await fetchAlphaVantage({
+    function: 'NEWS_SENTIMENT',
+    tickers: symbol,
+    sort: 'LATEST',
+    limit: 8
+  });
+  return Array.isArray(data?.feed) ? data.feed : [];
+}
+
 async function fetchFinnhubQuote(symbol) {
   const data = await fetchFinnhub('quote', { symbol });
   const price = Number(data?.c);
@@ -139,6 +164,8 @@ async function callOpenAIJson({ system, user, schema, name }) {
 module.exports = {
   badRequest,
   callOpenAIJson,
+  fetchAlphaNewsSentiment,
+  fetchAlphaVantage,
   fetchFinnhub,
   fetchFinnhubQuote,
   fetchTwelveQuote,

@@ -10,14 +10,27 @@ module.exports = async function handler(req, res) {
     const lang = String(body.lang || '').toLowerCase().startsWith('zh') ? 'Chinese' : 'English';
     const payload = await callOpenAIJson({
       name: 'portfolio_allocation',
-      system: 'You are an AI wealth strategist. Return concise portfolio allocation JSON only. This is educational, not financial advice.',
-      user: `Language: ${lang}. Capital: ${amount}. Current risk profile: ${currentRisk}. User request: ${prompt}. Return JSON with {summary, trend, allocations}. summary is one short investment suggestion sentence. trend is one short current market trend sentence. allocations must contain exactly 3 items: {label, weight, note, holdings}. holdings should contain 2-3 investable tickers as {symbol, name}. Weights should be integers and sum to around 100. Treat this as a global-user product: do not recommend Australian equities just because capital currency is AUD or because the user wants diversification away from US stocks. Only include Australia/ASX exposure when the user explicitly asks for Australian stocks, ASX, Australia equities, 澳股, 澳洲股票, or 澳大利亚股票.`,
+      system: 'You are an AI wealth strategist and portfolio investment committee. Return concise portfolio allocation JSON only. This is educational, not financial advice. Be specific, structured, and avoid generic filler.',
+      user: `Language: ${lang}. Capital: ${amount}. Current risk profile: ${currentRisk}. User request: ${prompt}. Return JSON with {summary, trend, committee, allocations}. summary is one short investment suggestion sentence. trend is one short current market trend sentence. committee contains {macro, opportunity, risk, bull, bear, final}. allocations must contain exactly 3 items: {label, weight, note, holdings}. holdings should contain 2-3 investable tickers as {symbol, name}. Weights should be integers and sum to around 100. Treat this as a global-user product: do not recommend Australian equities just because capital currency is AUD or because the user wants diversification away from US stocks. Only include Australia/ASX exposure when the user explicitly asks for Australian stocks, ASX, Australia equities, 澳股, 澳洲股票, or 澳大利亚股票.`,
       schema: {
         type: 'object',
         additionalProperties: false,
         properties: {
           summary: { type: 'string' },
           trend: { type: 'string' },
+          committee: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              macro: { type: 'string' },
+              opportunity: { type: 'string' },
+              risk: { type: 'string' },
+              bull: { type: 'string' },
+              bear: { type: 'string' },
+              final: { type: 'string' }
+            },
+            required: ['macro', 'opportunity', 'risk', 'bull', 'bear', 'final']
+          },
           allocations: {
             type: 'array',
             minItems: 3,
@@ -48,7 +61,7 @@ module.exports = async function handler(req, res) {
             }
           }
         },
-        required: ['summary', 'trend', 'allocations']
+        required: ['summary', 'trend', 'committee', 'allocations']
       }
     });
     return sendJson(res, 200, payload);

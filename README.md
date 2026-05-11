@@ -8,7 +8,7 @@
 
 - AI Allocation：根据用户输入生成投资组合配置
 - 股票搜索：搜索股票代码并打开资产分析卡片
-- Market Pulse：展示 S&P 500、Dow、Nasdaq、黄金、美油、美元指数、比特币等市场代理指标
+- AI 推荐近期热股 / 热门资产：会员解锁市场热度筛选，并可结合 Alpha Vantage / Finnhub 新闻源
 - AI News Analysis：用 OpenAI 分析新闻对行业和相关股票的影响
 - AI Trading Signal：用 OpenAI 生成 Buy / Hold / Sell 信号和分析理由
 - 策略板块拆解：点击饼图或板块查看推荐标的
@@ -41,6 +41,7 @@
 OPENAI_API_KEY=your_openai_key_here
 FINNHUB_API_KEY=your_finnhub_key_here
 TWELVE_DATA_API_KEY=your_twelve_data_key_here
+ALPHA_VANTAGE_API_KEY=your_alpha_vantage_key_here
 OPENAI_MODEL=gpt-4.1-mini
 ```
 
