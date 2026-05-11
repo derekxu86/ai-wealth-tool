@@ -776,15 +776,26 @@
             }).join('');
         }
 
+        function ashareNewsKeywords(text = '') {
+            const t = String(text).toLowerCase();
+            const tags = [];
+            if (/净利|营收|利润|业绩|增长|亏损|预增|预减/.test(t)) tags.push('业绩兑现');
+            if (/订单|合同|中标|客户|产能|交付/.test(t)) tags.push('订单/产能');
+            if (/回购|增持|减持|质押|分红/.test(t)) tags.push('资本动作');
+            if (/监管|处罚|问询|诉讼|风险/.test(t)) tags.push('风险事件');
+            if (/ai|算力|芯片|机器人|新能源|医药|消费|军工|低空/.test(t)) tags.push('题材催化');
+            return tags.length ? tags : ['新闻催化'];
+        }
+
         function buildAshareNewsAnalysis(news = [], reports = [], symbol, name) {
             const headlineText = news.slice(0, 3).map(item => item.title).filter(Boolean).join('；');
             const reportText = reports.slice(0, 2).map(item => [item.org, item.rating, item.title].filter(Boolean).join(' ')).filter(Boolean).join('；');
+            const tags = ashareNewsKeywords(`${headlineText} ${reportText}`);
             if (currentLang === 'zh') {
-                const base = headlineText || `${name || symbol} 近期公开新闻源返回有限`;
-                const research = reportText || '公开研报/评级字段较少，不能只凭空白评级做结论';
-                return `AI新闻分析：${base}。从交易角度看，先判断这些新闻是否改变公司收入预期、行业景气度或资金关注度。如果新闻集中在业绩、订单、政策或题材催化，短线容易放大波动；如果只是普通公告或转载，参考价值较低。结合${research}，当前更适合把新闻热度、日线趋势和成交活跃度一起观察，而不是因为单条标题直接追涨。`;
+                const base = headlineText || `${name || symbol} 近期公开新闻较少`;
+                return `核心催化集中在${tags.join('、')}。相关新闻包括：${base}。若新闻指向业绩兑现或订单改善，股价更容易获得基本面支撑；若主要来自题材传播，则更依赖成交量和板块持续性。短线重点看日线是否维持在关键均线之上、放量是否连续，以及同题材龙头是否同步走强。`;
             }
-            return `AI news read-through: ${headlineText || `${name || symbol} has limited public news returned`}. Treat the headlines as catalysts only if they change revenue expectations, sector demand, policy support, or market attention. ${reportText || 'Public research fields are limited'}, so combine news flow with the daily trend and volume rather than forcing a buy/sell conclusion from sparse data.`;
+            return `Key catalysts: ${tags.join(', ')}. Headlines: ${headlineText || `${name || symbol} has limited public news returned`}. If the flow confirms earnings, orders, or sector demand, price action has stronger support; if it is mostly theme-driven, watch volume persistence and sector leadership.`;
         }
 
         function buildAshareAIRating(news = [], reports = [], symbol, name) {
@@ -797,9 +808,9 @@
             score = Math.max(35, Math.min(88, score));
             const label = score >= 72 ? (currentLang === 'zh' ? '偏积极' : 'Positive') : score <= 50 ? (currentLang === 'zh' ? '偏谨慎' : 'Cautious') : (currentLang === 'zh' ? '中性观察' : 'Neutral watch');
             if (currentLang === 'zh') {
-                return `AI评级：${label}，综合分 ${score}/100。这个评级不是券商评级，而是根据公开新闻、研报标题、题材热度和短线风险做的产品内判断。若后续新闻继续指向业绩改善、政策支持或资金抱团，评级可上调；若日线转弱、利空增多或题材退潮，应降低仓位预期。`;
+                return `${label} · ${score}/100`;
             }
-            return `AI rating: ${label}, score ${score}/100. This is an in-product view based on public news, research titles, theme heat and short-term risk, not a broker rating. Upgrade the view only if news flow confirms earnings, policy support, or sustained market leadership.`;
+            return `${label} · ${score}/100`;
         }
 
         function tradingViewSymbol(symbol) {
@@ -985,7 +996,6 @@
                     <div id="a-share-info-tabs" class="grid gap-3 md:grid-cols-3">
                         <div class="text-xs text-zinc-500 font-bold">${currentLang === 'zh' ? '正在读取东方财富公开源...' : 'Loading public sources...'}</div>
                     </div>
-                    ${gated}
                 </div>
             `;
         }
@@ -999,19 +1009,23 @@
                 : `<p class="text-xs text-zinc-500 font-bold leading-relaxed">${emptyText}</p>`;
             const aiNews = buildAshareNewsAnalysis(news, reports, symbol, name);
             const aiRating = buildAshareAIRating(news, reports, symbol, name);
+            const premiumPanel = isPremiumMember() ? `
+                <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3 md:col-span-2">
+                    <div class="flex items-start justify-between gap-3 mb-2">
+                        <p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest">${currentLang === 'zh' ? 'AI新闻分析与评级' : 'AI News Analysis & Rating'}</p>
+                        <span class="shrink-0 px-2 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20 text-[10px] font-black">${escapeAttr(aiRating)}</span>
+                    </div>
+                    <p class="text-xs text-zinc-300 font-bold leading-relaxed">${escapeAttr(aiNews)}</p>
+                </div>
+            ` : `
+                <div class="md:col-span-2">${premiumGateHtml('analysis')}</div>
+            `;
             box.innerHTML = `
                 <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
                     <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '相关新闻' : 'News'}</p>
                     ${renderRows(news, currentLang === 'zh' ? '公开新闻源暂未返回，先参考日线图和题材热度。' : 'No public news returned. Use chart and theme heat first.', item => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(item.title)}</p>`)}
                 </div>
-                <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
-                    <p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? 'AI新闻分析' : 'AI News Analysis'}</p>
-                    <p class="text-xs text-zinc-300 font-bold leading-relaxed">${escapeAttr(aiNews)}</p>
-                </div>
-                <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
-                    <p class="text-[10px] text-amber-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? 'AI评级' : 'AI Rating'}</p>
-                    <p class="text-xs text-zinc-300 font-bold leading-relaxed">${escapeAttr(aiRating)}</p>
-                </div>
+                ${premiumPanel}
             `;
         }
 
@@ -1325,7 +1339,7 @@
             return [...unique.values()]
                 .filter(item => item.score > 0)
                 .sort((a, b) => b.score - a.score)
-                .slice(0, currentLang === 'zh' ? 8 : 6);
+                .slice(0, 6);
         }
 
         function hotAssetCategoryEn(groups) {
@@ -2070,7 +2084,7 @@
                 <div class="bg-[#111113] border border-zinc-800 rounded-xl overflow-hidden hover:border-blue-500/50 transition-all cursor-pointer" onclick="closeModal('drilldown-modal'); openStockAnalysis('${escapeAttr(sub.symbol)}', '${escapeAttr(sub.name)}');">
                     <div class="p-4 flex justify-between items-center">
                         <div class="flex items-center gap-3">
-                            <div class="bg-zinc-800 w-12 h-12 rounded-lg flex items-center justify-center font-black text-xs text-white overflow-hidden px-1">
+                            <div class="bg-zinc-800 w-16 h-12 rounded-lg flex-shrink-0 flex items-center justify-center font-black text-xs text-white overflow-hidden px-1">
                                 <span class="truncate max-w-full">${escapeAttr(isAshareSymbol(sub.symbol) ? ashareCode(sub.symbol) : sub.symbol)}</span>
                             </div>
                             <div class="min-w-0">
