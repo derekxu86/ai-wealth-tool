@@ -1047,7 +1047,8 @@
             setTimeout(() => hydrateAshareInfo(symbol, name), 50);
             return `
                 <div id="a-share-info-tabs" class="mt-5 grid gap-3 md:grid-cols-3">
-                    <div class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4 text-xs text-zinc-500 font-bold">${currentLang === 'zh' ? '正在读取相关新闻...' : 'Loading related news...'}</div>
+                    <div id="related-news-box" class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4 text-xs text-zinc-500 font-bold">${currentLang === 'zh' ? '正在读取相关新闻...' : 'Loading related news...'}</div>
+                    ${renderInvestmentCommitteeLauncher(symbol, name, 'A-share')}
                 </div>
             `;
         }
@@ -1059,13 +1060,15 @@
             const renderRows = (rows, emptyText, mapper) => rows.length
                 ? rows.slice(0, 3).map(mapper).join('')
                 : `<p class="text-xs text-zinc-500 font-bold leading-relaxed">${emptyText}</p>`;
-            box.innerHTML = `
-                <div class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4">
+            const newsBox = document.getElementById('related-news-box');
+            const html = `
+                <div id="related-news-box" class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4">
                     <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-3">${currentLang === 'zh' ? '相关新闻' : 'Related News'}</p>
                     ${renderRows(news, currentLang === 'zh' ? '公开新闻源暂未返回，先参考日线图和题材热度。' : 'No public news returned. Use chart and theme heat first.', item => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(item.title)}</p>`)}
                 </div>
-                ${renderInvestmentCommitteeLauncher(symbol, name, 'A-share')}
             `;
+            if (newsBox) newsBox.outerHTML = html;
+            else box.insertAdjacentHTML('afterbegin', html);
         }
 
         async function fetchCompanyNews(symbol) {
@@ -1197,13 +1200,15 @@
         function renderInvestmentCommitteeLauncher(symbol, name, market) {
             if (!isPremiumMember()) return `<div class="md:col-span-2">${premiumGateHtml('analysis')}</div>`;
             return `
-                <div id="investment-committee-box" class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4 md:col-span-2">
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div id="investment-committee-box" class="relative overflow-hidden rounded-2xl border border-blue-500/40 bg-gradient-to-br from-blue-500/15 via-[#0b1120] to-[#09090b] p-4 md:col-span-2 shadow-[0_0_30px_rgba(59,130,246,0.10)]">
+                    <div class="absolute right-4 top-4 text-blue-400/40 text-3xl"><i class="ph ph-sparkle"></i></div>
+                    <div class="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest">${currentLang === 'zh' ? 'AI 投研' : 'AI Research'}</p>
-                            <p class="mt-1 text-xs text-zinc-500 font-bold leading-relaxed">${currentLang === 'zh' ? '查看技术面、新闻面、基本面和风险判断。' : 'Review technicals, news, fundamentals, and risk view.'}</p>
+                            <p class="text-[10px] text-blue-300 font-black uppercase tracking-widest">${currentLang === 'zh' ? '核心功能 · AI 投研' : 'Core Feature · AI Research'}</p>
+                            <p class="mt-1 text-base font-black text-white">${currentLang === 'zh' ? '生成完整投研判断' : 'Generate Research View'}</p>
+                            <p class="mt-1 text-xs text-blue-100/75 font-bold leading-relaxed">${currentLang === 'zh' ? '综合技术面、新闻面、基本面、风险和多空观点。' : 'Combines technicals, news, fundamentals, risk, and bull/bear views.'}</p>
                         </div>
-                        <button class="shrink-0 rounded-xl border border-blue-500/40 bg-blue-500/10 px-4 py-2 text-xs font-black text-blue-300 hover:bg-blue-500/20 transition-colors"
+                        <button class="shrink-0 rounded-xl border border-blue-400/50 bg-blue-500 px-5 py-3 text-xs font-black text-white hover:bg-blue-400 transition-colors shadow-lg shadow-blue-500/20"
                             onclick="loadInvestmentCommitteePanel('${escapeAttr(symbol)}', '${escapeAttr(name)}', '${escapeAttr(market)}')">
                             ${currentLang === 'zh' ? '查看投研分析' : 'View Research'}
                         </button>
@@ -1238,7 +1243,8 @@
             setTimeout(() => hydrateGlobalInfo(symbol, name), 50);
             return `
                 <div id="global-stock-info-tabs" class="mt-5 grid gap-3 md:grid-cols-3">
-                    <div class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4 text-xs text-zinc-500 font-bold">${currentLang === 'zh' ? '正在读取相关新闻...' : 'Loading related news...'}</div>
+                    <div id="related-news-box" class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4 text-xs text-zinc-500 font-bold">${currentLang === 'zh' ? '正在读取相关新闻...' : 'Loading related news...'}</div>
+                    ${renderInvestmentCommitteeLauncher(symbol, name, 'Global')}
                 </div>
             `;
         }
@@ -1265,13 +1271,15 @@
             const renderNews = news.length
                 ? news.slice(0, 3).map(n => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(n.headline)}</p>`).join('')
                 : `<p class="text-xs text-zinc-500 font-bold leading-relaxed">${currentLang === 'zh' ? '个股新闻源暂未返回。' : 'No company news returned.'}</p>`;
-            box.innerHTML = `
-                <div class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4">
+            const newsBox = document.getElementById('related-news-box');
+            const html = `
+                <div id="related-news-box" class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4">
                     <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-3">${currentLang === 'zh' ? '相关新闻' : 'Related News'}</p>
                     ${renderNews}
                 </div>
-                ${renderInvestmentCommitteeLauncher(symbol, name, 'Global')}
             `;
+            if (newsBox) newsBox.outerHTML = html;
+            else box.insertAdjacentHTML('afterbegin', html);
         }
 
         async function fetchAITradingSignal(payload) {
