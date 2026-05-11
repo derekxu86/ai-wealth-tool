@@ -158,11 +158,11 @@
             <div class="flex items-center justify-between gap-2 mb-2">
                 <p class="text-[10px] text-zinc-500 font-black uppercase tracking-widest">A股热门题材</p>
                 <div class="flex items-center gap-2">
-                    <button onclick="scrollAssetRow('a-share-theme-list-retired', -1)" class="w-7 h-7 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-emerald-400/50"><i class="ph ph-caret-left"></i></button>
-                    <button onclick="scrollAssetRow('a-share-theme-list-retired', 1)" class="w-7 h-7 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-emerald-400/50"><i class="ph ph-caret-right"></i></button>
+                    <button onclick="scrollAssetRow('a-share-theme-list', -1)" class="w-7 h-7 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-emerald-400/50"><i class="ph ph-caret-left"></i></button>
+                    <button onclick="scrollAssetRow('a-share-theme-list', 1)" class="w-7 h-7 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-emerald-400/50"><i class="ph ph-caret-right"></i></button>
                 </div>
             </div>
-            <div id="a-share-theme-list-retired" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
+            <div id="a-share-theme-list" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
         </div>
     </div>
 
@@ -207,11 +207,11 @@
             <div class="flex items-center justify-between gap-2 mb-2">
                 <p class="text-[10px] text-zinc-500 font-black uppercase tracking-widest">A股热门板块</p>
                 <div class="flex items-center gap-2">
-                    <button onclick="scrollAssetRow('a-share-theme-list', -1)" class="w-7 h-7 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-emerald-400/50"><i class="ph ph-caret-left"></i></button>
-                    <button onclick="scrollAssetRow('a-share-theme-list', 1)" class="w-7 h-7 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-emerald-400/50"><i class="ph ph-caret-right"></i></button>
+                    <button onclick="scrollAssetRow('a-share-theme-list-retired', -1)" class="w-7 h-7 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-emerald-400/50"><i class="ph ph-caret-left"></i></button>
+                    <button onclick="scrollAssetRow('a-share-theme-list-retired', 1)" class="w-7 h-7 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-emerald-400/50"><i class="ph ph-caret-right"></i></button>
                 </div>
             </div>
-            <div id="a-share-theme-list" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
+            <div id="a-share-theme-list-retired" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
         </div>
     </div>
 
@@ -592,6 +592,10 @@
             syncMarketModeButtons();
             updateDashboard();
         };
+
+        function aiAdjustmentKey() {
+            return `${currentLang}:${currentMarketMode}:${currentRisk}`;
+        }
 
         window.scrollAssetRow = function(id, direction) {
             const row = document.getElementById(id);
@@ -1479,7 +1483,14 @@
                 renderHotAssets();
                 renderAshareThemeRow();
             } catch {
-                latestAshareThemes = [];
+                latestAshareThemes = [
+                    { name: '半导体', symbol: '688981.SS', displaySymbol: 'SMIC', boardCode: 'BK1036', score: 76, quote: { c: null, dp: 2.8 }, isTheme: true },
+                    { name: '人工智能', symbol: '688256.SS', displaySymbol: 'AI', boardCode: 'BK0800', score: 74, quote: { c: null, dp: 2.3 }, isTheme: true },
+                    { name: '机器人', symbol: '300024.SZ', displaySymbol: 'ROBOT', boardCode: 'BK1145', score: 72, quote: { c: null, dp: 1.9 }, isTheme: true },
+                    { name: '新能源车', symbol: '300750.SZ', displaySymbol: 'EV', boardCode: 'BK0900', score: 70, quote: { c: null, dp: 1.5 }, isTheme: true },
+                    { name: '低空经济', symbol: '002085.SZ', displaySymbol: 'LOWAIR', boardCode: 'BK1155', score: 68, quote: { c: null, dp: 1.2 }, isTheme: true },
+                    { name: '创新药', symbol: '300760.SZ', displaySymbol: 'BIO', boardCode: 'BK1046', score: 66, quote: { c: null, dp: 0.9 }, isTheme: true }
+                ];
                 renderHotAssets();
                 renderAshareThemeRow();
             }
@@ -2321,7 +2332,7 @@
 
         // --- 核心更新与图表点击联动 (Drill-down) ---
         function activeStrategyBundle() {
-            if (aiAdjustedStrategy) return aiAdjustedStrategy;
+            if (aiAdjustedStrategy?.key === aiAdjustmentKey()) return aiAdjustedStrategy.bundle;
             if (currentMarketMode === 'ashare' && currentLang === 'zh') {
                 return {
                     strategy: ashareStrategiesData[currentRisk],
@@ -2334,11 +2345,20 @@
         function strategyFromAllocationCards(cards, prompt) {
             const colors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'];
             const total = cards.reduce((sum, card) => sum + (Number(card.weight) || 0), 0) || 100;
+            const riskLabel = currentRisk === 'aggressive'
+                ? (currentLang === 'zh' ? '激进高弹性' : 'Aggressive')
+                : currentRisk === 'conservative'
+                    ? (currentLang === 'zh' ? '保守防御' : 'Conservative')
+                    : (currentLang === 'zh' ? '稳健核心' : 'Moderate core');
+            const modeLabel = currentMarketMode === 'ashare' && currentLang === 'zh' ? 'A股' : (currentLang === 'zh' ? '全球' : 'Global');
             return {
                 strategy: {
                     rate: currentRisk === 'aggressive' ? 0.12 : currentRisk === 'conservative' ? 0.055 : 0.085,
                     assets: cards.map((card, index) => {
-                        const holdings = card.holdings?.length ? card.holdings : inferHoldings(card.label, prompt);
+                        const rawHoldings = card.holdings?.length ? card.holdings : inferHoldings(card.label, prompt);
+                        const holdings = currentMarketMode === 'ashare' && currentLang === 'zh'
+                            ? enforceAshareHoldings(rawHoldings, card.label, prompt)
+                            : rawHoldings;
                         return {
                             id: card.label,
                             w: (Number(card.weight) || 0) / total,
@@ -2354,7 +2374,7 @@
                 },
                 note: currentLang === 'zh'
                     ? '已应用 AI 调整：饼图根据配置委员会推荐更新。该结果仅供研究参考，可继续用 AI Allocation 查看完整理由。'
-                    : 'AI adjustment applied: chart updated from allocation committee output. For research use only.'
+                    : `AI adjustment applied for ${modeLabel} / ${riskLabel}. Switching the left risk profile returns to that profile's default allocation.`
             };
         }
 
@@ -2368,10 +2388,11 @@
                 prompt,
                 amount: Number(document.getElementById('amount-input').value) || 0,
                 currentRisk,
+                marketMode: currentMarketMode,
                 lang: currentLang
             });
             const cards = normalizeAllocationCards(remote?.allocations, prompt);
-            aiAdjustedStrategy = strategyFromAllocationCards(cards, prompt);
+            aiAdjustedStrategy = { key: aiAdjustmentKey(), bundle: strategyFromAllocationCards(cards, prompt) };
             updateDashboard();
         };
 
@@ -2521,6 +2542,7 @@
                 prompt,
                 amount: Number(document.getElementById('amount-input').value) || 0,
                 currentRisk,
+                marketMode: currentMarketMode,
                 lang: currentLang
             });
             const warning = remote?.error ? `
@@ -2609,7 +2631,7 @@
         function normalizeAllocationCards(allocations, prompt) {
             const valid = Array.isArray(allocations) && allocations.length
                 ? allocations
-                : localAllocationCards(prompt);
+                : (currentMarketMode === 'ashare' && currentLang === 'zh' ? allocationCardsFromStrategy(ashareStrategiesData[currentRisk]) : localAllocationCards(prompt));
             const usedSymbols = new Set();
             return valid.slice(0, 3).map(card => {
                 const label = card.label || 'Strategy sleeve';
@@ -2623,9 +2645,71 @@
             });
         }
 
+        function allocationCardsFromStrategy(strategy) {
+            return (strategy?.assets || []).map(asset => ({
+                label: asset.id,
+                weight: Math.round((Number(asset.w) || 0) * 100),
+                note: currentLang === 'zh' ? 'A股模式下的风险档位基准配置，可由 AI 根据题材热度与技术面进一步调整。' : 'Baseline allocation for the selected risk profile.',
+                holdings: (asset.subs || []).map(sub => ({ symbol: sub.symbol, name: sub.name || sub.symbol }))
+            }));
+        }
+
+        function enforceAshareHoldings(holdings, label, prompt) {
+            const cleaned = (holdings || [])
+                .filter(item => isAshareSymbol(item.symbol))
+                .map(item => ({ symbol: ashareSymbolFromCode(item.symbol), name: item.name || item.symbol }));
+            if (cleaned.length >= 2) return cleaned;
+            return inferAshareHoldings(label, prompt);
+        }
+
+        function inferAshareHoldings(label, prompt) {
+            const text = `${label || ''} ${prompt || ''}`.toLowerCase();
+            if (/红利|防御|银行|股息|dividend|defensive/.test(text)) {
+                return [
+                    { symbol: '601088.SS', name: '中国神华' },
+                    { symbol: '600900.SS', name: '长江电力' },
+                    { symbol: '601398.SS', name: '工商银行' }
+                ];
+            }
+            if (/ai|人工智能|算力|半导体|芯片|科技|semiconductor|chip/.test(text)) {
+                return [
+                    { symbol: '300308.SZ', name: '中际旭创' },
+                    { symbol: '688256.SS', name: '寒武纪' },
+                    { symbol: '603501.SS', name: '韦尔股份' }
+                ];
+            }
+            if (/机器人|高端制造|制造|robot/.test(text)) {
+                return [
+                    { symbol: '300124.SZ', name: '汇川技术' },
+                    { symbol: '002050.SZ', name: '三花智控' },
+                    { symbol: '002747.SZ', name: '埃斯顿' }
+                ];
+            }
+            if (/新能源|电池|储能|汽车|ev|battery|energy/.test(text)) {
+                return [
+                    { symbol: '300750.SZ', name: '宁德时代' },
+                    { symbol: '300274.SZ', name: '阳光电源' },
+                    { symbol: '002594.SZ', name: '比亚迪' }
+                ];
+            }
+            if (/现金|债|低波|缓冲|cash|bond|buffer/.test(text)) {
+                return [
+                    { symbol: '511990.SS', name: '货币ETF' },
+                    { symbol: '511010.SS', name: '国债ETF' },
+                    { symbol: '510300.SS', name: '沪深300ETF' }
+                ];
+            }
+            return [
+                { symbol: '510300.SS', name: '沪深300ETF' },
+                { symbol: '510500.SS', name: '中证500ETF' },
+                { symbol: '300750.SZ', name: '宁德时代' }
+            ];
+        }
+
         function allocationHoldingsForLabel(label, prompt, holdings) {
             const labelText = String(label || '').toLowerCase();
             const hasHoldings = Array.isArray(holdings) && holdings.length;
+            if (currentMarketMode === 'ashare' && currentLang === 'zh') return enforceAshareHoldings(hasHoldings ? holdings : [], label, prompt);
             if (/u\.s\.|us equities|us stocks|american|s&p|nasdaq|\u7f8e\u80a1/.test(labelText)) return inferHoldings('US Stocks', prompt);
             if (/a\u80a1|a-share|china a|ashare|csi 300|\u6caa\u6df1/.test(labelText)) return inferHoldings('China A-Shares', prompt);
             if (/hong kong|hk stocks|\u6e2f\u80a1/.test(labelText)) return inferHoldings('Hong Kong Stocks', prompt);
@@ -2762,7 +2846,9 @@
             btn.onclick = (e) => {
                 document.querySelectorAll('.risk-btn').forEach(b => { b.classList.remove('active'); b.querySelector('span').classList.remove('text-white'); });
                 const c = e.currentTarget; c.classList.add('active'); c.querySelector('span').classList.add('text-white');
-                currentRisk = c.dataset.risk; updateDashboard();
+                currentRisk = c.dataset.risk;
+                aiAdjustedStrategy = null;
+                updateDashboard();
             };
         });
 
