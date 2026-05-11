@@ -27,6 +27,7 @@
         .signal-scroll::-webkit-scrollbar-track { background: transparent; }
         .signal-scroll::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 999px; }
         .signal-scroll { scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
+        .premium-blur { filter: blur(3px); user-select: none; pointer-events: none; opacity: 0.45; }
 
         .news-v-container { height: 42px; overflow: hidden; position: relative; width: 100%; }
         .news-v-content { display: flex; flex-direction: column; animation: scroll-v 30s linear infinite; }
@@ -61,6 +62,9 @@
                 <div class="w-2 h-2 bg-green-500 rounded-full pulse-green"></div>
                 <span class="text-[10px] font-bold text-zinc-400 tracking-widest uppercase" data-i18n="liveFeed">Live Feed</span>
             </div>
+            <button onclick="openMembershipModal()" class="flex items-center justify-center gap-2 bg-[#18181b] border border-zinc-800 px-3 py-2 sm:py-1.5 rounded-full text-xs font-black text-zinc-300 hover:text-white hover:border-blue-500/50 transition-colors shadow-lg">
+                <i class="ph ph-user-circle text-sm"></i> <span id="member-status-text">Sign In</span>
+            </button>
         </div>
     </div>
 
@@ -111,18 +115,6 @@
                 <div class="flex-1 w-full max-h-64 overflow-y-auto pr-2 space-y-2 no-scrollbar" id="asset-list"></div>
             </div>
             <div id="dynamic-strategy-note" class="hidden mb-4 bg-blue-500/10 border border-blue-500/20 rounded-xl px-4 py-3 text-xs text-blue-200 leading-relaxed"></div>
-            <div id="hot-assets-panel" class="mb-4 bg-[#18181b] border border-zinc-800/70 rounded-2xl p-3 sm:p-4">
-                <div class="flex items-center justify-between gap-3 mb-3">
-                    <div>
-                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest" data-i18n="hotAssets">Hot Assets</p>
-                        <p class="text-[10px] text-zinc-600 font-bold mt-1" data-i18n="hotAssetsSub">Market heat + AI screen</p>
-                    </div>
-                    <i class="ph ph-fire text-orange-400 text-lg"></i>
-                </div>
-                <div id="hot-assets-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div class="text-xs text-zinc-500 font-bold" data-i18n="loading">Loading...</div>
-                </div>
-            </div>
             <div class="mt-auto border-t border-zinc-800 pt-5 sm:pt-6 grid grid-cols-2 gap-3 sm:gap-4">
                 <div class="bg-[#18181b] rounded-2xl p-3 sm:p-4 border border-zinc-800/50">
                     <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1" data-i18n="proj1y">1Y Proj.</p>
@@ -133,6 +125,18 @@
                     <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1" data-i18n="proj5y">5Y Proj.</p>
                     <p class="text-xl font-black text-white mb-1" id="forecast-5y">--</p>
                     <p class="text-xs font-bold text-emerald-400 flex items-center gap-1"><i class="ph ph-trend-up"></i> <span id="return-5y">--</span></p>
+                </div>
+            </div>
+            <div id="hot-assets-panel" class="mt-4 bg-[#18181b] border border-zinc-800/70 rounded-2xl p-3 sm:p-4">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                    <div>
+                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest" data-i18n="hotAssets">Hot Assets</p>
+                        <p class="text-[10px] text-zinc-600 font-bold mt-1" data-i18n="hotAssetsSub">Market heat + AI screen</p>
+                    </div>
+                    <i class="ph ph-fire text-orange-400 text-lg"></i>
+                </div>
+                <div id="hot-assets-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div class="text-xs text-zinc-500 font-bold" data-i18n="loading">Loading...</div>
                 </div>
             </div>
         </div>
@@ -251,6 +255,32 @@
         </div>
     </div>
 
+    <div id="membership-modal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <div class="modal-content w-full max-w-lg bg-[#18181b] rounded-2xl border border-zinc-700 shadow-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-zinc-800 flex justify-between items-center bg-[#111113]">
+                <h3 class="text-xs font-bold text-blue-400 uppercase tracking-widest flex items-center gap-2"><i class="ph ph-lock-key text-lg"></i> <span data-i18n="memberTitle">Member Access</span></h3>
+                <button onclick="closeModal('membership-modal')" class="text-zinc-500 hover:text-white"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            <div class="p-6">
+                <p class="text-2xl font-black text-white mb-2" data-i18n="memberHeadline">Unlock premium decision analysis</p>
+                <p class="text-sm text-zinc-400 leading-relaxed mb-5" data-i18n="memberCopy">Free users can view market prices, charts, news headlines and basic data. Premium members unlock AI allocation, news analysis and trading signal reasoning.</p>
+                <div class="grid sm:grid-cols-2 gap-3 mb-4">
+                    <button onclick="activateMembership('monthly')" class="text-left rounded-2xl border border-blue-500/40 bg-blue-500/10 p-4 hover:bg-blue-500/20 transition-colors">
+                        <p class="text-xs text-blue-300 font-black uppercase tracking-widest" data-i18n="monthlyPlan">Monthly</p>
+                        <p class="text-3xl font-black text-white mt-2">$10<span class="text-sm text-zinc-500">/mo</span></p>
+                    </button>
+                    <button onclick="activateMembership('annual')" class="text-left rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 hover:bg-emerald-500/20 transition-colors">
+                        <p class="text-xs text-emerald-300 font-black uppercase tracking-widest" data-i18n="annualPlan">Annual</p>
+                        <p class="text-3xl font-black text-white mt-2">$96<span class="text-sm text-zinc-500">/yr</span></p>
+                        <p class="text-[10px] text-emerald-300 font-bold mt-1" data-i18n="annualSave">Save 20%</p>
+                    </button>
+                </div>
+                <button onclick="signInFree()" class="w-full rounded-xl border border-zinc-700 bg-[#09090b] py-3 text-sm font-black text-zinc-300 hover:text-white hover:border-zinc-500 transition-colors" data-i18n="freeSignin">Continue as free user</button>
+                <p class="mt-4 text-[10px] text-zinc-600 leading-relaxed" data-i18n="billingNote">Demo billing state only. Connect Stripe plus Supabase/Firebase before accepting real payments.</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         const OPENAI_AGENT_ENDPOINT = '/api/strategist-chat';
         const OPENAI_ALLOCATION_ENDPOINT = '/api/portfolio-allocation';
@@ -266,6 +296,7 @@
         let currentLang = 'en'; // 默认英文
         let newsDataStore = []; 
         let latestTradingSignal = null;
+        let userAccount = JSON.parse(localStorage.getItem('wealthStrategistUser') || '{"signedIn":false,"plan":"free"}');
 
         const i18n = {
             en: {
@@ -277,8 +308,11 @@
                 liveFeed: "Live Feed", searchPlaceholder: "Ticker (AAPL, BHP.AX, 0700.HK...)",
                 aiAnalysis: "AI Asset Analysis", impactedTickers: "Impacted Industries & Tickers",
                 marketInsight: "Market Insight", newsSummaryLabel: "AI Executive Summary",
-                aiTradingSignal: "AI Trading Signal", confidence: "Confidence", aiSignalAnalysis: "AI Analysis",
+                aiTradingSignal: "AI Trading Analysis", confidence: "Confidence", aiSignalAnalysis: "AI Analysis",
                 hotAssets: "Hot Assets", hotAssetsSub: "Market heat + AI screen", loading: "Loading...",
+                memberTitle: "Member Access", memberHeadline: "Unlock premium decision analysis",
+                memberCopy: "Free users can view market prices, charts, news headlines and basic data. Premium members unlock AI allocation, news analysis and trading signal reasoning.",
+                monthlyPlan: "Monthly", annualPlan: "Annual", annualSave: "Save 20%", freeSignin: "Continue as free user", billingNote: "Demo billing state only. Connect Stripe plus Supabase/Firebase before accepting real payments.",
                 allocationPrompt: "I have 20,000, higher risk tolerance, and want AI plus energy exposure.",
                 segmentAlloc: "Segment Allocation", portWeight: "Weight",
                 metrics: { ind: "Sector/Industry", rate: "Wall St. Rating", heat: "Market Heat", exp: "Momentum", idx: "AI Conviction", risk: "Risk Level" },
@@ -293,8 +327,11 @@
                 liveFeed: "全球专线已连", searchPlaceholder: "输入代码 (如 AAPL, BHP.AX, 0700.HK)",
                 aiAnalysis: "AI 多维标的分析", impactedTickers: "受影响行业与相关股票",
                 marketInsight: "市场洞察", newsSummaryLabel: "AI 深度摘要",
-                aiTradingSignal: "AI 交易信号", confidence: "信心指数", aiSignalAnalysis: "AI 分析",
+                aiTradingSignal: "AI 交易分析", confidence: "信心指数", aiSignalAnalysis: "AI 分析",
                 hotAssets: "热门投资资产", hotAssetsSub: "市场热度 + AI 筛选", loading: "加载中...",
+                memberTitle: "会员权限", memberHeadline: "解锁高级决策分析",
+                memberCopy: "普通用户可以查看价格、图表、新闻标题和基础数据。会员可以使用 AI 配置、新闻解析和交易信号推理。",
+                monthlyPlan: "月付会员", annualPlan: "年付会员", annualSave: "省 20%", freeSignin: "以普通用户继续", billingNote: "当前是演示会员状态。正式收款前需要接 Stripe 和 Supabase/Firebase。",
                 allocationPrompt: "我有2万块，风险偏高，想投 AI 和能源",
                 segmentAlloc: "板块分配额度", portWeight: "组合占比",
                 metrics: { ind: "所属行业", rate: "专业评级", heat: "市场热度", exp: "爆发力 (动量)", idx: "AI 投资指数", risk: "风险度评估" },
@@ -462,8 +499,72 @@
             document.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.placeholder = i18n[currentLang][el.getAttribute('data-i18n-placeholder')]);
             document.querySelectorAll('[data-i18n-value]').forEach(el => el.value = i18n[currentLang][el.getAttribute('data-i18n-value')]);
             document.getElementById('lang-toggle-text').textContent = currentLang === 'en' ? 'EN / 中文' : '中文 / EN';
+            updateMemberStatus();
         }
         function toggleLang() { currentLang = currentLang === 'en' ? 'zh' : 'en'; renderLang(); renderHotAssets(); updateDashboard(); }
+
+        function isPremiumMember() {
+            return userAccount && ['monthly', 'annual'].includes(userAccount.plan);
+        }
+
+        function updateMemberStatus() {
+            const el = document.getElementById('member-status-text');
+            if (!el) return;
+            if (isPremiumMember()) {
+                el.textContent = currentLang === 'zh' ? (userAccount.plan === 'annual' ? '年付会员' : '月付会员') : (userAccount.plan === 'annual' ? 'Annual Member' : 'Monthly Member');
+            } else if (userAccount.signedIn) {
+                el.textContent = currentLang === 'zh' ? '普通用户' : 'Free User';
+            } else {
+                el.textContent = currentLang === 'zh' ? '登录 / 会员' : 'Sign In';
+            }
+        }
+
+        function saveAccount() {
+            localStorage.setItem('wealthStrategistUser', JSON.stringify(userAccount));
+            updateMemberStatus();
+        }
+
+        window.openMembershipModal = function() {
+            const modal = document.getElementById('membership-modal');
+            modal.classList.replace('hidden', 'flex'); setTimeout(() => modal.classList.add('show'), 10);
+        };
+
+        window.activateMembership = function(plan) {
+            userAccount = { signedIn: true, plan, startedAt: new Date().toISOString() };
+            saveAccount();
+            closeModal('membership-modal');
+            if (document.getElementById('tv-technical-widget')) {
+                const symbol = document.getElementById('signal-modal-symbol')?.textContent || '';
+            }
+        };
+
+        window.signInFree = function() {
+            userAccount = { signedIn: true, plan: 'free', startedAt: new Date().toISOString() };
+            saveAccount();
+            closeModal('membership-modal');
+        };
+
+        function premiumGateHtml(feature = 'analysis') {
+            const title = currentLang === 'zh' ? '会员可查看高级分析' : 'Premium analysis locked';
+            const copy = currentLang === 'zh'
+                ? '普通用户不会触发付费智能接口。升级会员后可查看配置建议、新闻解析和买卖信号推理。'
+                : 'Free users do not trigger paid intelligence calls. Upgrade to unlock allocation advice, news analysis and signal reasoning.';
+            const button = currentLang === 'zh' ? '成为会员' : 'Upgrade';
+            return `
+                <div class="relative overflow-hidden rounded-xl border border-blue-500/30 bg-blue-500/10 p-4">
+                    <div class="premium-blur">
+                        <p class="text-sm font-black text-white">${feature === 'allocation' ? 'Portfolio thesis and current trend...' : 'Detailed decision reasoning, catalyst map and risk checkpoints...'}</p>
+                        <p class="mt-2 text-xs text-zinc-400">Market context, sector read-through, valuation pressure, momentum confirmation...</p>
+                    </div>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-4 bg-[#09090b]/70">
+                        <i class="ph ph-lock-key text-blue-400 text-2xl mb-2"></i>
+                        <p class="text-sm font-black text-white">${title}</p>
+                        <p class="mt-1 text-xs text-zinc-400 leading-relaxed">${copy}</p>
+                        <button onclick="openMembershipModal()" class="mt-3 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-400 text-white text-xs font-black">${button}</button>
+                    </div>
+                </div>
+            `;
+        }
 
         function apiCandidates(endpoint) {
             return LOCAL_API_BASE ? [endpoint, `${LOCAL_API_BASE}${endpoint}`] : [endpoint];
@@ -629,14 +730,14 @@
             if (label) label.className = `text-xs font-black text-${signal.color}-400`;
             box.innerHTML = `
                 <div class="h-full flex flex-col justify-center p-4">
-                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-3">${currentLang === 'zh' ? 'AI 交易信号' : 'AI Trading Signal'}</p>
+                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-3">${currentLang === 'zh' ? '交易信号' : 'Trading Signal'}</p>
                     <div class="flex items-end justify-between gap-3">
                         <div>
                             <p class="text-3xl font-black text-${signal.color}-400">${displayLabel}</p>
                             <p class="mt-1 text-xs text-zinc-500 font-bold">${note}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[10px] text-zinc-600 uppercase font-bold">${currentLang === 'zh' ? '信号' : 'Signal'}</p>
+                            <p class="text-[10px] text-zinc-600 uppercase font-bold">${currentLang === 'zh' ? '买卖判断' : 'Buy/Sell View'}</p>
                             <p class="text-xs text-zinc-400 font-black">${currentLang === 'zh' ? '价格动量' : 'Price momentum'}</p>
                         </div>
                     </div>
@@ -648,6 +749,7 @@
         }
 
         async function fetchAITradingSignal(payload) {
+            if (!isPremiumMember()) return null;
             for (const endpoint of OPENAI_SIGNAL_ENDPOINTS) {
                 try {
                     const data = await fetchApiJson(endpoint, {
@@ -699,11 +801,11 @@
             if (label) label.className = `text-xs font-black text-${color}-400`;
             box.innerHTML = `
                 <div class="h-full flex flex-col justify-center p-4">
-                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-3">${currentLang === 'zh' ? 'AI 交易信号' : 'AI Trading Signal'}</p>
+                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-3">${currentLang === 'zh' ? '交易信号' : 'Trading Signal'}</p>
                     <div class="flex items-start justify-between gap-3 shrink-0">
                         <div>
                             <p class="text-3xl font-black text-${color}-400 leading-none">${text}</p>
-                            <p class="mt-1 text-[10px] text-zinc-500 font-bold uppercase tracking-wider">${currentLang === 'zh' ? 'AI 买卖判断' : 'AI buy/sell view'}</p>
+                            <p class="mt-1 text-[10px] text-zinc-500 font-bold uppercase tracking-wider">${currentLang === 'zh' ? '买卖判断' : 'Buy/Sell View'}</p>
                         </div>
                         <div class="text-right shrink-0">
                             <p class="text-[10px] text-zinc-600 uppercase font-bold">${currentLang === 'zh' ? '信心指数' : 'Confidence'}</p>
@@ -714,8 +816,21 @@
                         <div class="h-full bg-${color}-500 rounded-full" style="width:${confidence}%"></div>
                     </div>
                     <button onclick="openSignalAnalysisModal()" class="mt-4 w-full h-10 rounded-lg border border-blue-500/40 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 hover:text-white transition-colors text-xs font-black uppercase tracking-widest">
-                        ${currentLang === 'zh' ? '查看 AI 分析' : 'View AI Analysis'}
+                        ${currentLang === 'zh' ? '查看分析' : 'View Analysis'}
                     </button>
+                </div>
+            `;
+        }
+
+        function renderPremiumTradingGate(symbol, name) {
+            const box = document.getElementById('tv-technical-widget');
+            const label = document.getElementById('tv-technical-fallback-label');
+            if (label) label.textContent = currentLang === 'zh' ? '会员' : 'Premium';
+            if (!box) return;
+            box.innerHTML = `
+                <div class="h-full p-4 flex flex-col justify-center">
+                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-3">${currentLang === 'zh' ? '交易信号' : 'Trading Signal'}</p>
+                    ${premiumGateHtml('signal')}
                 </div>
             `;
         }
@@ -1142,7 +1257,7 @@
                 analystRating: currentLang === 'zh' ? '分析师评级' : 'Analyst Rating',
                 noData: currentLang === 'zh' ? '暂无数据' : 'No Data',
                 buySide: currentLang === 'zh' ? '买方倾向' : 'Buy-side',
-                aiSignal: currentLang === 'zh' ? 'AI 交易信号' : 'AI Trading Signal',
+                aiSignal: currentLang === 'zh' ? 'AI 交易分析' : 'AI Trading Analysis',
                 live: currentLang === 'zh' ? '实时' : 'Live'
             };
             
@@ -1216,26 +1331,30 @@
             `;
             renderStockSparkline(symbol, q);
             renderTechnicalFallback(symbol, hasQuote ? q.dp : 0);
-            fetchAITradingSignal({
-                symbol,
-                name,
-                price: hasQuote ? Number(q.c) : null,
-                changePercent: hasQuote ? Number(q.dp) : null,
-                quoteAvailable: hasQuote,
-                quoteSource: data.quoteSource,
-                market: marketMeta.market,
-                currency: marketMeta.currency,
-                industry,
-                analystBuyPercent: buyRec !== '--' ? Number(buyRec) : null,
-                ratingText,
-                marketHeat: ai.heat,
-                momentum: ai.exp,
-                aiConviction: ai.idx,
-                riskLevel: ai.risk,
-                lang: currentLang
-            }).then(signal => {
-                if (signal && document.getElementById('tv-technical-widget')) renderAITradingSignal(signal, hasQuote ? q.dp : 0, symbol, name);
-            });
+            if (isPremiumMember()) {
+                fetchAITradingSignal({
+                    symbol,
+                    name,
+                    price: hasQuote ? Number(q.c) : null,
+                    changePercent: hasQuote ? Number(q.dp) : null,
+                    quoteAvailable: hasQuote,
+                    quoteSource: data.quoteSource,
+                    market: marketMeta.market,
+                    currency: marketMeta.currency,
+                    industry,
+                    analystBuyPercent: buyRec !== '--' ? Number(buyRec) : null,
+                    ratingText,
+                    marketHeat: ai.heat,
+                    momentum: ai.exp,
+                    aiConviction: ai.idx,
+                    riskLevel: ai.risk,
+                    lang: currentLang
+                }).then(signal => {
+                    if (signal && document.getElementById('tv-technical-widget')) renderAITradingSignal(signal, hasQuote ? q.dp : 0, symbol, name);
+                });
+            } else {
+                renderPremiumTradingGate(symbol, name);
+            }
             clearInterval(stockChartTimer);
             stockChartTimer = setInterval(async () => {
                 const fresh = await fetchFullStockData(symbol);
@@ -1275,6 +1394,7 @@
         }
 
         async function fetchAINewsAnalysis(newsItem) {
+            if (!isPremiumMember()) return null;
             try {
                 const data = await fetchApiJson(OPENAI_NEWS_ENDPOINT, {
                     method: 'POST',
@@ -1312,6 +1432,14 @@
             
             const modal = document.getElementById('news-modal');
             modal.classList.replace('hidden', 'flex'); setTimeout(() => modal.classList.add('show'), 10);
+
+            if (!isPremiumMember()) {
+                document.getElementById('news-summary').innerHTML = `
+                    <p>${escapeAttr(buildNewsAnalysis(n))}</p>
+                    <div class="mt-4">${premiumGateHtml('news')}</div>
+                `;
+                return;
+            }
 
             const aiNews = await fetchAINewsAnalysis(n);
             if (aiNews) {
@@ -1452,6 +1580,30 @@
             const prompt = document.getElementById('allocation-prompt').value.trim();
             const output = document.getElementById('ai-allocation-output');
             output.classList.remove('hidden');
+            if (!isPremiumMember()) {
+                const cards = normalizeAllocationCards(null, prompt);
+                output.innerHTML = `
+                    <div class="md:col-span-3">${premiumGateHtml('allocation')}</div>
+                    ${cards.map(card => `
+                        <div class="p-4 bg-[#09090b] border border-zinc-800 rounded-xl opacity-80">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-sm font-black text-white">${escapeAttr(card.label)}</p>
+                                <p class="text-lg font-black text-blue-400">${card.weight}%</p>
+                            </div>
+                            <div class="h-1.5 bg-zinc-800 rounded-full overflow-hidden mb-2"><div class="h-full bg-blue-500" style="width:${card.weight}%"></div></div>
+                            <p class="text-xs text-zinc-500 leading-relaxed mb-3">${escapeAttr(card.note)}</p>
+                            <div class="flex flex-wrap gap-2">
+                                ${(card.holdings || []).map(h => `
+                                    <button class="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-700 hover:border-blue-500 hover:text-blue-400 text-[10px] font-black text-zinc-300 transition-colors" onclick="openStockAnalysis('${escapeAttr(h.symbol)}', '${escapeAttr(h.name || h.symbol)}')">
+                                        ${escapeAttr(h.symbol)}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+                return;
+            }
             output.innerHTML = `<div class="md:col-span-3 p-4 bg-[#09090b] border border-zinc-800 rounded-xl text-sm text-zinc-400"><i class="ph ph-circle-notch animate-spin text-blue-400 mr-2"></i>${currentLang === 'zh' ? 'AI 正在生成配置和趋势建议...' : 'AI is building allocation and trend view...'}</div>`;
 
             const remote = await callJsonEndpoint(OPENAI_ALLOCATION_ENDPOINT, {
