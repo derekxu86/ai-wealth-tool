@@ -100,8 +100,14 @@
         </div>
 
         <div class="p-5 sm:p-8 md:w-7/12 flex flex-col bg-gradient-to-br from-[#09090b] to-[#111113]">
-            <div class="flex justify-between items-end mb-6">
-                <h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest" data-i18n="portStruct">Structure</h2>
+            <div class="flex justify-between items-end mb-6 gap-3">
+                <div class="flex items-center gap-3">
+                    <h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest" data-i18n="portStruct">Structure</h2>
+                    <div id="market-mode-toggle" class="hidden flex items-center rounded-full border border-zinc-800 bg-[#09090b] p-1">
+                        <button id="mode-global-btn" onclick="setMarketMode('global')" class="px-3 py-1 rounded-full text-[10px] font-black bg-blue-500 text-white">全球</button>
+                        <button id="mode-ashare-btn" onclick="setMarketMode('ashare')" class="px-3 py-1 rounded-full text-[10px] font-black text-zinc-500 hover:text-white">A股</button>
+                    </div>
+                </div>
                 <span class="text-[10px] text-zinc-600 flex items-center gap-1 font-bold"><i class="ph ph-arrows-clockwise"></i> <span data-i18n="updates">Auto-sync</span></span>
             </div>
             <div class="flex flex-col sm:flex-row items-center gap-5 sm:gap-8 mb-6 sm:mb-8 flex-1">
@@ -136,13 +142,23 @@
                 <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest" data-i18n="hotAssets">Hot Assets</p>
                 <p class="text-[10px] text-zinc-600 font-bold mt-1" data-i18n="hotAssetsSub">Market heat + AI screen</p>
             </div>
-            <i class="ph ph-fire text-orange-400 text-lg"></i>
+            <div class="flex items-center gap-2">
+                <button onclick="scrollAssetRow('hot-assets-list', -1)" class="w-8 h-8 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-orange-400/50"><i class="ph ph-caret-left"></i></button>
+                <button onclick="scrollAssetRow('hot-assets-list', 1)" class="w-8 h-8 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-orange-400/50"><i class="ph ph-caret-right"></i></button>
+                <i class="ph ph-fire text-orange-400 text-lg"></i>
+            </div>
         </div>
         <div id="hot-assets-list" class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
             <div class="text-xs text-zinc-500 font-bold" data-i18n="loading">Loading...</div>
         </div>
         <div id="a-share-theme-row" class="hidden mt-3 border-t border-zinc-800 pt-3">
-            <p class="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-2">A股题材热度</p>
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <p class="text-[10px] text-zinc-500 font-black uppercase tracking-widest">A股题材热度</p>
+                <div class="flex items-center gap-2">
+                    <button onclick="scrollAssetRow('a-share-theme-list', -1)" class="w-7 h-7 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-emerald-400/50"><i class="ph ph-caret-left"></i></button>
+                    <button onclick="scrollAssetRow('a-share-theme-list', 1)" class="w-7 h-7 rounded-lg border border-zinc-800 bg-[#09090b] text-zinc-500 hover:text-white hover:border-emerald-400/50"><i class="ph ph-caret-right"></i></button>
+                </div>
+            </div>
             <div id="a-share-theme-list" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
         </div>
     </div>
@@ -364,6 +380,26 @@
             ] }
         };
 
+        const ashareStrategiesData = {
+            conservative: { rate: 0.045, assets: [
+                { id: "A股红利防御", w: 0.4, c: '#10b981', subs: [{ name: '中国神华', symbol: '601088.SS', share: 0.34 }, { name: '长江电力', symbol: '600900.SS', share: 0.33 }, { name: '工商银行', symbol: '601398.SS', share: 0.33 }] },
+                { id: "宽基核心", w: 0.35, c: '#3b82f6', subs: [{ name: '沪深300ETF', symbol: '510300.SS', share: 0.55 }, { name: '中证500ETF', symbol: '510500.SS', share: 0.45 }] },
+                { id: "现金与低波动", w: 0.25, c: '#64748b', subs: [{ name: '货币ETF', symbol: '511990.SS', share: 0.6 }, { name: '国债ETF', symbol: '511010.SS', share: 0.4 }] }
+            ] },
+            moderate: { rate: 0.078, assets: [
+                { id: "科技制造核心", w: 0.35, c: '#8b5cf6', subs: [{ name: '宁德时代', symbol: '300750.SZ', share: 0.34 }, { name: '中际旭创', symbol: '300308.SZ', share: 0.33 }, { name: '工业富联', symbol: '601138.SS', share: 0.33 }] },
+                { id: "消费医药龙头", w: 0.25, c: '#f59e0b', subs: [{ name: '贵州茅台', symbol: '600519.SS', share: 0.5 }, { name: '恒瑞医药', symbol: '600276.SS', share: 0.5 }] },
+                { id: "中特估与红利", w: 0.25, c: '#10b981', subs: [{ name: '中国移动', symbol: '600941.SS', share: 0.5 }, { name: '中国神华', symbol: '601088.SS', share: 0.5 }] },
+                { id: "现金缓冲", w: 0.15, c: '#475569', subs: [{ name: '货币ETF', symbol: '511990.SS', share: 1.0 }] }
+            ] },
+            aggressive: { rate: 0.118, assets: [
+                { id: "AI算力与半导体", w: 0.4, c: '#6366f1', subs: [{ name: '中际旭创', symbol: '300308.SZ', share: 0.34 }, { name: '寒武纪', symbol: '688256.SS', share: 0.33 }, { name: '韦尔股份', symbol: '603501.SS', share: 0.33 }] },
+                { id: "机器人与高端制造", w: 0.3, c: '#0ea5e9', subs: [{ name: '汇川技术', symbol: '300124.SZ', share: 0.34 }, { name: '三花智控', symbol: '002050.SZ', share: 0.33 }, { name: '埃斯顿', symbol: '002747.SZ', share: 0.33 }] },
+                { id: "新能源与出海", w: 0.2, c: '#14b8a6', subs: [{ name: '宁德时代', symbol: '300750.SZ', share: 0.5 }, { name: '阳光电源', symbol: '300274.SZ', share: 0.5 }] },
+                { id: "交易现金", w: 0.1, c: '#64748b', subs: [{ name: '货币ETF', symbol: '511990.SS', share: 1.0 }] }
+            ] }
+        };
+
         const dynamicStockPools = {
             aiHot: [
                 { name: 'NVIDIA Corp', symbol: 'NVDA', tag: 'AI leader' },
@@ -431,7 +467,7 @@
             ]
         };
 
-        let currentRisk = 'moderate', chartInstance = null, stockChartInstance = null, stockChartTimer = null;
+        let currentRisk = 'moderate', currentMarketMode = 'global', chartInstance = null, stockChartInstance = null, stockChartTimer = null;
         let latestMarketPulse = [];
         let latestMarketScan = null;
         let latestAshareThemes = [];
@@ -506,9 +542,33 @@
             document.querySelectorAll('[data-i18n-placeholder]').forEach(el => el.placeholder = i18n[currentLang][el.getAttribute('data-i18n-placeholder')]);
             document.querySelectorAll('[data-i18n-value]').forEach(el => el.value = i18n[currentLang][el.getAttribute('data-i18n-value')]);
             document.getElementById('lang-toggle-text').textContent = currentLang === 'en' ? 'EN / 中文' : '中文 / EN';
+            const modeToggle = document.getElementById('market-mode-toggle');
+            if (modeToggle) modeToggle.classList.toggle('hidden', currentLang !== 'zh');
+            if (currentLang !== 'zh') currentMarketMode = 'global';
+            syncMarketModeButtons();
             updateMemberStatus();
         }
         function toggleLang() { currentLang = currentLang === 'en' ? 'zh' : 'en'; renderLang(); renderHotAssets(); renderAshareThemeRow(); updateDashboard(); }
+
+        function syncMarketModeButtons() {
+            const globalBtn = document.getElementById('mode-global-btn');
+            const ashareBtn = document.getElementById('mode-ashare-btn');
+            if (!globalBtn || !ashareBtn) return;
+            globalBtn.className = `px-3 py-1 rounded-full text-[10px] font-black ${currentMarketMode === 'global' ? 'bg-blue-500 text-white' : 'text-zinc-500 hover:text-white'}`;
+            ashareBtn.className = `px-3 py-1 rounded-full text-[10px] font-black ${currentMarketMode === 'ashare' ? 'bg-red-500 text-white' : 'text-zinc-500 hover:text-white'}`;
+        }
+
+        window.setMarketMode = function(mode) {
+            currentMarketMode = mode === 'ashare' && currentLang === 'zh' ? 'ashare' : 'global';
+            syncMarketModeButtons();
+            updateDashboard();
+        };
+
+        window.scrollAssetRow = function(id, direction) {
+            const row = document.getElementById(id);
+            if (!row) return;
+            row.scrollBy({ left: direction * Math.max(240, row.clientWidth * 0.7), behavior: 'smooth' });
+        };
 
         function isPremiumMember() {
             return userAccount && ['monthly', 'annual'].includes(userAccount.plan);
@@ -696,6 +756,28 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        function renderAsharePublicMetrics(fundamentals = {}) {
+            const rows = [
+                ['市盈率', fundamentals.pe],
+                ['市净率', fundamentals.pb],
+                ['换手率', fundamentals.turnover],
+                ['股息率', fundamentals.dividendYield]
+            ].filter(([, value]) => value !== undefined && value !== null && value !== '-' && Number.isFinite(Number(value)));
+            if (!rows.length) {
+                return `<p class="text-xs text-zinc-500 font-bold leading-relaxed">公开评级字段暂未返回。A股可优先参考上方日线图、题材热度、新闻研报和成交活跃度。</p>`;
+            }
+            return rows.map(([label, value]) => {
+                const n = Number(value);
+                const display = label.includes('率') ? `${n.toFixed(2)}%` : n.toFixed(2);
+                return `
+                    <div class="flex items-center justify-between border-b border-zinc-800/70 pb-2 last:border-0">
+                        <span class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${label}</span>
+                        <span class="text-sm text-blue-400 font-black">${display}</span>
+                    </div>
+                `;
+            }).join('');
         }
 
         function tradingViewSymbol(symbol) {
@@ -897,15 +979,15 @@
             box.innerHTML = `
                 <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
                     <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '新闻' : 'News'}</p>
-                    ${renderRows(news, currentLang === 'zh' ? '公开新闻源暂未返回。' : 'No public news returned.', item => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(item.title)}</p>`)}
+                    ${renderRows(news, currentLang === 'zh' ? '公开新闻源暂未返回，先参考日线图和题材热度。' : 'No public news returned. Use chart and theme heat first.', item => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(item.title)}</p>`)}
                 </div>
                 <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
                     <p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '研报' : 'Research'}</p>
-                    ${renderRows(reports, currentLang === 'zh' ? '公开研报源暂未返回。' : 'No public research returned.', item => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(item.title)}<br><span class="text-zinc-600">${escapeAttr(item.org || item.date || '')}</span></p>`)}
+                    ${renderRows(reports, currentLang === 'zh' ? '公开研报暂未返回，不显示空评级结论。' : 'No public research returned; no empty rating shown.', item => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(item.title)}<br><span class="text-zinc-600">${escapeAttr(item.org || item.date || '')}</span></p>`)}
                 </div>
                 <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
                     <p class="text-[10px] text-amber-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '机构评级' : 'Rating'}</p>
-                    ${renderRows(ratingRows, currentLang === 'zh' ? '公开评级字段暂未返回。' : 'No public rating returned.', item => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(item.org || '机构')} · ${escapeAttr(item.rating || '评级未披露')}<br><span class="text-zinc-600">${escapeAttr(item.date || '')}</span></p>`)}
+                    ${renderRows(ratingRows, currentLang === 'zh' ? '公开评级字段暂未返回，暂不强行生成买入/卖出。' : 'No public rating returned; no forced buy/sell label.', item => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(item.org || '机构')} · ${escapeAttr(item.rating || '评级未披露')}<br><span class="text-zinc-600">${escapeAttr(item.date || '')}</span></p>`)}
                 </div>
             `;
         }
@@ -1123,6 +1205,7 @@
                     name: row.f14,
                     symbol: ashareSymbolFromCode(row.f128 || row.f136 || row.f12),
                     displaySymbol: row.f12,
+                    boardCode: row.f12,
                     category: currentLang === 'zh' ? 'A股题材' : 'A-share theme',
                     score: Math.max(45, Math.min(95, Math.round(60 + Number(row.f3 || 0) * 5))),
                     tag: currentLang === 'zh' ? '题材热度 / 龙头观察' : 'Theme heat / leader watch',
@@ -1301,7 +1384,7 @@
                 const change = Number.isFinite(Number(item.quote?.dp)) ? `${up ? '+' : ''}${Number(item.quote.dp).toFixed(2)}%` : `${item.score}/100`;
                 return `
                     <button class="min-w-[145px] sm:min-w-[155px] flex-1 text-left rounded-xl border border-zinc-800 bg-[#09090b] px-3 py-2 hover:border-emerald-400/50 hover:bg-zinc-900 transition-colors"
-                        onclick="openStockAnalysis('${escapeAttr(item.symbol)}', '${escapeAttr(item.name)}')">
+                        onclick="openAshareTheme('${escapeAttr(item.boardCode || item.displaySymbol)}', '${escapeAttr(item.name)}')">
                         <div class="flex items-center justify-between gap-2">
                             <span class="text-xs font-black text-white truncate">${escapeAttr(item.name)}</span>
                             <span class="text-xs font-black ${up ? 'text-emerald-400' : 'text-red-400'}">${change}</span>
@@ -1311,6 +1394,59 @@
                 `;
             }).join('');
         }
+
+        async function fetchAshareThemeStocks(boardCode) {
+            try {
+                const fields = 'f12,f14,f3,f2,f5,f6';
+                const url = `https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=12&po=1&np=1&fltt=2&invt=2&fid=f3&fs=b:${boardCode}&fields=${fields}`;
+                const data = await jsonpRequest(url);
+                const rows = data?.data?.diff || [];
+                return rows.map(row => ({
+                    symbol: ashareSymbolFromCode(row.f12),
+                    name: row.f14 || row.f12,
+                    change: Number(row.f3 || 0),
+                    price: Number(row.f2 || 0) / 100
+                })).filter(x => x.symbol);
+            } catch {
+                return [];
+            }
+        }
+
+        window.openAshareTheme = async function(boardCode, themeName) {
+            const modal = document.getElementById('drilldown-modal');
+            document.getElementById('modal-title').textContent = themeName;
+            document.getElementById('modal-color-indicator').style.backgroundColor = '#10b981';
+            document.getElementById('modal-amount').textContent = 'A股题材';
+            document.getElementById('modal-weight').textContent = boardCode || '--';
+            const box = document.getElementById('modal-sub-assets');
+            box.innerHTML = `<div class="p-4 text-xs font-bold text-zinc-500">正在读取板块成分股...</div>`;
+            modal.classList.replace('hidden', 'flex'); setTimeout(() => modal.classList.add('show'), 10);
+            const stocks = await fetchAshareThemeStocks(boardCode);
+            if (!stocks.length) {
+                box.innerHTML = `<div class="p-4 text-sm font-bold text-zinc-400 bg-[#111113] border border-zinc-800 rounded-xl">该题材的公开成分股暂未返回。可以直接搜索相关股票代码查看行情。</div>`;
+                return;
+            }
+            box.innerHTML = stocks.map(stock => {
+                const up = stock.change >= 0;
+                return `
+                    <div class="bg-[#111113] border border-zinc-800 rounded-xl overflow-hidden hover:border-emerald-500/50 transition-all cursor-pointer" onclick="closeModal('drilldown-modal'); openStockAnalysis('${escapeAttr(stock.symbol)}', '${escapeAttr(stock.name)}');">
+                        <div class="p-4 flex justify-between items-center">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-zinc-800 w-12 h-12 rounded-lg flex items-center justify-center font-black text-xs text-white">${escapeAttr(ashareCode(stock.symbol))}</div>
+                                <div>
+                                    <p class="text-sm font-bold text-white mb-0.5">${escapeAttr(stock.name)}</p>
+                                    <p class="text-[10px] text-zinc-500 uppercase">${escapeAttr(stock.symbol)} · 题材成分股</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="block text-sm font-black ${up ? 'text-emerald-400' : 'text-red-400'}">${up ? '+' : ''}${stock.change.toFixed(2)}%</span>
+                                <span class="block text-[10px] text-zinc-500">¥${Number.isFinite(stock.price) ? stock.price.toFixed(2) : '--'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        };
 
         function marketScanPool(group) {
             const live = latestMarketScan?.groups?.[group];
@@ -1637,7 +1773,7 @@
 
                 <div class="mb-5 ${isAshareSymbol(symbol) ? 'h-72' : 'h-24'} rounded-2xl border border-zinc-800 bg-[#09090b] p-3">
                     <div class="mb-2 flex items-center justify-between">
-                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${isAshareSymbol(symbol) ? (currentLang === 'zh' ? '日线蜡烛图' : 'Daily Candles') : uiText.priceTrace}</p>
+                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${isAshareSymbol(symbol) ? (currentLang === 'zh' ? '日线图' : 'Daily Chart') : uiText.priceTrace}</p>
                         <p class="text-[10px] ${isAshareSymbol(symbol) ? 'text-red-400' : 'text-zinc-500'} font-bold uppercase tracking-widest">${isAshareSymbol(symbol) ? (currentLang === 'zh' ? '东方财富' : 'Eastmoney') : (hasQuote ? data.quoteSource : uiText.noLiveQuote)}</p>
                     </div>
                     <div class="${isAshareSymbol(symbol) ? 'h-60' : 'h-14'}"><canvas id="${isAshareSymbol(symbol) ? 'a-share-main-kline-canvas' : 'stock-price-chart'}"></canvas></div>
@@ -1646,10 +1782,10 @@
                 <div class="mb-5 grid gap-3 md:grid-cols-2">
                     <div class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4">
                         <div class="flex items-center justify-between mb-3">
-                            <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${uiText.analystRating}</p>
+                            <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${isAshareSymbol(symbol) ? (currentLang === 'zh' ? 'A股公开指标' : 'A-share Metrics') : uiText.analystRating}</p>
                             <p class="text-xs font-black text-blue-400">${buyRec !== '--' ? buyRec + '% ' + uiText.buySide : uiText.noData}</p>
                         </div>
-                        <div class="space-y-2">${renderRecommendationBars(data.sentiment)}</div>
+                        <div class="space-y-2">${isAshareSymbol(symbol) && !data.sentiment ? renderAsharePublicMetrics(data.cnFundamentals) : renderRecommendationBars(data.sentiment)}</div>
                     </div>
                     <div class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4">
                         <div class="flex items-center justify-between mb-3">
@@ -1833,9 +1969,19 @@
         }
 
         // --- 核心更新与图表点击联动 (Drill-down) ---
+        function activeStrategyBundle() {
+            if (currentMarketMode === 'ashare' && currentLang === 'zh') {
+                return {
+                    strategy: ashareStrategiesData[currentRisk],
+                    note: 'A股模式：组合切换为A股题材、宽基、红利和现金缓冲配置。题材会随市场热度观察，但不代表即时买入建议。'
+                };
+            }
+            return dynamicStrategy(strategiesData[currentRisk]);
+        }
+
         function updateDashboard() {
             const amount = parseFloat(document.getElementById('amount-input').value) || 0;
-            const dynamic = dynamicStrategy(strategiesData[currentRisk]);
+            const dynamic = activeStrategyBundle();
             const strategy = dynamic.strategy;
             const dict = i18n[currentLang];
             const note = document.getElementById('dynamic-strategy-note');
@@ -1859,7 +2005,7 @@
                 <div class="flex justify-between items-center p-3 rounded-xl bg-[#18181b] border border-zinc-800/50 cursor-pointer hover:bg-zinc-800 transition-colors" onclick="openDrilldown(${index})">
                     <div class="flex items-center gap-3">
                         <div class="w-3 h-3 rounded-full" style="background-color: ${a.c};"></div>
-                        <span class="text-xs font-bold text-zinc-300">${dict.assets[a.id]}</span>
+                        <span class="text-xs font-bold text-zinc-300">${dict.assets[a.id] || a.id}</span>
                     </div>
                     <div class="text-right">
                         <span class="block text-sm font-black text-white">${(a.w * 100).toFixed(0)}%</span>
@@ -1882,12 +2028,12 @@
 
         window.openDrilldown = function(index) {
             const amount = parseFloat(document.getElementById('amount-input').value) || 0;
-            const strategy = dynamicStrategy(strategiesData[currentRisk]).strategy;
+            const strategy = activeStrategyBundle().strategy;
             const asset = strategy.assets[index];
             const dict = i18n[currentLang];
             const assetAmount = amount * asset.w;
 
-            document.getElementById('modal-title').textContent = dict.assets[asset.id];
+            document.getElementById('modal-title').textContent = dict.assets[asset.id] || asset.id;
             document.getElementById('modal-color-indicator').style.backgroundColor = asset.c;
             document.getElementById('modal-amount').textContent = formatCurrency(assetAmount);
             document.getElementById('modal-weight').textContent = `${(asset.w * 100).toFixed(0)}%`;
