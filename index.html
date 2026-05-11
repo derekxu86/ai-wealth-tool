@@ -135,7 +135,7 @@
                     </div>
                     <i class="ph ph-fire text-orange-400 text-lg"></i>
                 </div>
-                <div id="hot-assets-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div id="hot-assets-list" class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                     <div class="text-xs text-zinc-500 font-bold" data-i18n="loading">Loading...</div>
                 </div>
             </div>
@@ -170,15 +170,6 @@
             <span class="flex-shrink-0 text-[10px] font-black bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded border border-emerald-500/20 uppercase tracking-widest">Market Pulse</span>
             <div id="market-pulse-content" class="flex flex-1 gap-2 text-xs overflow-x-auto no-scrollbar sm:grid sm:grid-cols-4 lg:grid-cols-7">
                 <div class="text-zinc-500 font-bold">Loading...</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="max-w-5xl w-full mt-4 bg-[#18181b] border border-zinc-800 px-3 sm:px-4 py-3 rounded-2xl">
-        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-            <span class="flex-shrink-0 text-[10px] font-black bg-red-500/10 text-red-400 px-2 py-1 rounded border border-red-500/20 uppercase tracking-widest" data-i18n="cnThemeHeat">A-Share Themes</span>
-            <div id="a-share-theme-content" class="flex flex-1 gap-2 text-xs overflow-x-auto no-scrollbar">
-                <div class="text-zinc-500 font-bold" data-i18n="loading">Loading...</div>
             </div>
         </div>
     </div>
@@ -319,7 +310,6 @@
                 marketInsight: "Market Insight", newsSummaryLabel: "AI Executive Summary",
                 aiTradingSignal: "AI Trading Analysis", confidence: "Confidence", aiSignalAnalysis: "AI Analysis",
                 hotAssets: "Hot Assets", hotAssetsSub: "Market heat + AI screen", loading: "Loading...",
-                cnThemeHeat: "A-Share Themes",
                 memberTitle: "Member Access", memberHeadline: "Unlock premium decision analysis",
                 memberCopy: "Free users can view market prices, charts, news headlines and basic data. Premium members unlock AI allocation, news analysis and trading signal reasoning.",
                 monthlyPlan: "Monthly", annualPlan: "Annual", annualSave: "Save 20%", freeSignin: "Continue as free user", billingNote: "Demo billing state only. Connect Stripe plus Supabase/Firebase before accepting real payments.",
@@ -339,7 +329,6 @@
                 marketInsight: "市场洞察", newsSummaryLabel: "AI 深度摘要",
                 aiTradingSignal: "AI 交易分析", confidence: "信心指数", aiSignalAnalysis: "AI 分析",
                 hotAssets: "热门投资资产", hotAssetsSub: "市场热度 + AI 筛选", loading: "加载中...",
-                cnThemeHeat: "今日题材热度",
                 memberTitle: "会员权限", memberHeadline: "解锁高级决策分析",
                 memberCopy: "普通用户可以查看价格、图表、新闻标题和基础数据。会员可以使用 AI 配置、新闻解析和交易信号推理。",
                 monthlyPlan: "月付会员", annualPlan: "年付会员", annualSave: "省 20%", freeSignin: "以普通用户继续", billingNote: "当前是演示会员状态。正式收款前需要接 Stripe 和 Supabase/Firebase。",
@@ -440,9 +429,10 @@
         let currentRisk = 'moderate', chartInstance = null, stockChartInstance = null, stockChartTimer = null;
         let latestMarketPulse = [];
         let latestMarketScan = null;
+        let latestAshareThemes = [];
         const formatCurrency = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
         function quoteCurrency(symbol) {
-            if (/\.(SZ|SS)$/i.test(symbol)) return { prefix: '¥', market: 'China A-share market', currency: 'CNY' };
+            if (/\.(SZ|SS)$/i.test(symbol) || /^[036]\d{5}$/.test(String(symbol || ''))) return { prefix: '¥', market: 'China A-share market', currency: 'CNY' };
             if (/\.HK$/i.test(symbol)) return { prefix: 'HK$', market: 'Hong Kong market', currency: 'HKD' };
             if (/\.AX$/i.test(symbol)) return { prefix: 'A$', market: 'Australian market', currency: 'AUD' };
             return { prefix: '$', market: 'US/global market', currency: 'USD' };
@@ -487,6 +477,7 @@
             { symbol: '600036.SS', description: 'China Merchants Bank' },
             { symbol: '000001.SZ', description: 'Ping An Bank Co Ltd' },
             { symbol: '000858.SZ', description: 'Wuliangye Yibin Co Ltd' },
+            { symbol: '002626.SZ', description: '金达威' },
             { symbol: '300750.SZ', description: 'Contemporary Amperex Technology' },
             { symbol: 'KWEB', description: 'KraneShares CSI China Internet ETF' },
             { symbol: 'MCHI', description: 'iShares MSCI China ETF' },
@@ -1003,31 +994,65 @@
             return `${/^6|^9/.test(code) ? '1' : '0'}.${code}`;
         }
 
+        function ashareSymbolFromCode(code) {
+            const clean = ashareCode(code);
+            if (!/^\d{6}$/.test(clean)) return clean;
+            return `${clean}${/^6|^9/.test(clean) ? '.SS' : '.SZ'}`;
+        }
+
+        async function fetchAshareQuote(symbol) {
+            if (!isAshareSymbol(symbol)) return null;
+            const secid = ashareSecid(symbol);
+            const fields = 'f43,f57,f58,f60,f116,f162,f167,f168,f170,f173';
+            const url = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&ut=fa5fd1943c7b386f172d6893dbfba10b&fields=${fields}`;
+            const data = await jsonpRequest(url);
+            const row = data?.data;
+            if (!row || !row.f57) return null;
+            const price = Number(row.f43);
+            const prev = Number(row.f60);
+            const pct = Number(row.f170);
+            return {
+                symbol: ashareSymbolFromCode(row.f57),
+                name: row.f58 || symbol,
+                quote: {
+                    c: Number.isFinite(price) ? price / 100 : null,
+                    pc: Number.isFinite(prev) ? prev / 100 : null,
+                    dp: Number.isFinite(pct) ? pct / 100 : 0,
+                    t: Date.now()
+                },
+                profile: { name: row.f58 || symbol, ticker: ashareSymbolFromCode(row.f57), country: 'China' },
+                fundamentals: {
+                    marketCap: row.f116,
+                    pe: row.f162,
+                    pb: row.f167,
+                    turnover: row.f168,
+                    dividendYield: row.f173
+                },
+                quoteSource: currentLang === 'zh' ? '东方财富' : 'Eastmoney'
+            };
+        }
+
         async function loadAshareThemeHeat() {
-            const container = document.getElementById('a-share-theme-content');
-            if (!container) return;
             try {
                 const fields = 'f12,f14,f3,f128,f136';
                 const url = `https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=8&po=1&np=1&fltt=2&invt=2&fid=f3&fs=m:90+t:3&fields=${fields}`;
                 const data = await jsonpRequest(url);
                 const rows = data?.data?.diff || [];
                 if (!rows.length) throw new Error('empty');
-                container.innerHTML = rows.map(row => {
-                    const up = Number(row.f3) >= 0;
-                    const leader = row.f128 || row.f136 || '';
-                    const click = leader && /^\d{6}$/.test(String(leader)) ? `onclick="openStockAnalysis('${leader}', '${escapeAttr(row.f14)}')"` : '';
-                    return `
-                        <button title="${escapeAttr(row.f14)}" class="min-w-[128px] text-left bg-[#09090b] border border-zinc-800 rounded-lg px-2 py-2 hover:border-red-400/50 transition-colors" ${click}>
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="font-black text-zinc-300 truncate">${escapeAttr(row.f14)}</span>
-                                <span class="font-black ${up ? 'text-emerald-400' : 'text-red-400'}">${up ? '+' : ''}${Number(row.f3 || 0).toFixed(2)}%</span>
-                            </div>
-                            <div class="mt-1 text-zinc-500 font-bold truncate">${leader ? (currentLang === 'zh' ? '龙头 ' : 'Lead ') + leader : (currentLang === 'zh' ? '题材热度' : 'Theme heat')}</div>
-                        </button>
-                    `;
-                }).join('');
+                latestAshareThemes = rows.map(row => ({
+                    name: row.f14,
+                    symbol: ashareSymbolFromCode(row.f128 || row.f136 || row.f12),
+                    displaySymbol: row.f12,
+                    category: currentLang === 'zh' ? 'A股题材' : 'A-share theme',
+                    score: Math.max(45, Math.min(95, Math.round(60 + Number(row.f3 || 0) * 5))),
+                    tag: currentLang === 'zh' ? '题材热度 / 龙头观察' : 'Theme heat / leader watch',
+                    quote: { c: null, dp: Number(row.f3 || 0) },
+                    isTheme: true
+                })).filter(x => x.name);
+                renderHotAssets();
             } catch {
-                container.innerHTML = `<div class="text-red-400 font-bold">${currentLang === 'zh' ? '题材热度加载失败，可继续使用股票搜索。' : 'Theme heat unavailable.'}</div>`;
+                latestAshareThemes = [];
+                renderHotAssets();
             }
         }
 
@@ -1072,6 +1097,13 @@
         }
 
         function hotAssetCandidates() {
+            const ashareThemes = currentLang === 'zh'
+                ? (latestAshareThemes || []).map(item => ({
+                    ...item,
+                    category: 'A股热门板块',
+                    tag: item.tag || '题材热度 / 龙头观察'
+                }))
+                : [];
             const pulse = (latestMarketPulse || []).map(item => {
                 const q = item.quote;
                 const change = Number(q?.dp) || 0;
@@ -1103,7 +1135,7 @@
             }));
 
             const unique = new Map();
-            [...flattened, ...pulse].forEach(item => {
+            [...ashareThemes, ...flattened, ...pulse].forEach(item => {
                 if (!item.symbol) return;
                 const key = item.symbol.toUpperCase();
                 const existing = unique.get(key);
@@ -1112,7 +1144,7 @@
             return [...unique.values()]
                 .filter(item => item.score > 0)
                 .sort((a, b) => b.score - a.score)
-                .slice(0, 6);
+                .slice(0, currentLang === 'zh' ? 8 : 6);
         }
 
         function hotAssetCategoryEn(groups) {
@@ -1163,7 +1195,7 @@
                 const changeColor = q ? (up ? 'text-emerald-400' : 'text-red-400') : 'text-blue-400';
                 const clickName = item.name || item.displaySymbol || item.symbol;
                 return `
-                    <button class="text-left rounded-xl border border-zinc-800 bg-[#09090b] px-3 py-2 hover:border-orange-400/50 hover:bg-zinc-900 transition-colors"
+                    <button class="min-w-[172px] sm:min-w-[188px] text-left rounded-xl border border-zinc-800 bg-[#09090b] px-3 py-2 hover:border-orange-400/50 hover:bg-zinc-900 transition-colors"
                         onclick="openStockAnalysis('${escapeAttr(item.symbol)}', '${escapeAttr(clickName)}')">
                         <div class="flex items-center justify-between gap-2">
                             <span class="text-xs font-black text-white truncate">${escapeAttr(item.name)}</span>
@@ -1342,6 +1374,17 @@
                 .filter(r => r.symbol.includes(q) || r.description.toUpperCase().includes(q))
                 .slice(0, 8);
         }
+        async function quickAshareSearch(query) {
+            const q = String(query || '').trim().toUpperCase();
+            if (!/^\d{6}$/.test(q)) return [];
+            const symbol = ashareSymbolFromCode(q);
+            try {
+                const info = await fetchAshareQuote(symbol);
+                return info ? [{ symbol: info.symbol || symbol, description: info.name || symbol, source: 'Eastmoney' }] : [{ symbol, description: 'A股股票' }];
+            } catch {
+                return [{ symbol, description: 'A股股票' }];
+            }
+        }
         function renderSearchResults(results, query, isFallback = false) {
             const dropdown = document.getElementById('search-dropdown');
             const merged = results && results.length ? results : localSearch(query);
@@ -1368,12 +1411,18 @@
             
             searchTimeout = setTimeout(async () => {
                 try {
+                    const ashareResults = await quickAshareSearch(query);
                     const data = await fetchApiJson(withQuery(SEARCH_API_ENDPOINT, { q: query }));
-                    if (!data) return;
-                    const filtered = (data.result || []).slice(0, 8); 
+                    const remote = data?.result || [];
+                    const filtered = [...ashareResults, ...remote]
+                        .filter((item, index, arr) => item?.symbol && arr.findIndex(x => String(x.symbol).toUpperCase() === String(item.symbol).toUpperCase()) === index)
+                        .slice(0, 8); 
                     
                     renderSearchResults(filtered, query, false);
-                } catch(err) { renderSearchResults([], query, true); }
+                } catch(err) {
+                    const ashareResults = await quickAshareSearch(query);
+                    renderSearchResults(ashareResults, query, !ashareResults.length);
+                }
             }, 500);
         });
         document.getElementById('global-search').addEventListener('keydown', (e) => {
@@ -1394,8 +1443,25 @@
             modal.classList.replace('hidden', 'flex'); setTimeout(() => modal.classList.add('show'), 10);
             body.innerHTML = `<div class="flex flex-col items-center py-10"><i class="ph ph-circle-notch animate-spin text-4xl text-blue-500 mb-4"></i><p class="text-xs font-bold text-zinc-500">${currentLang === 'zh' ? 'AI 正在分析这只股票...' : 'Running AI Matrix Analysis...'}</p></div>`;
 
-            const data = await fetchFullStockData(symbol);
+            let data = await fetchFullStockData(symbol);
             if(!data) { body.innerHTML = `<p class="text-red-500 font-bold text-center">Data connection failed for ${symbol}</p>`; return; }
+            if (isAshareSymbol(symbol)) {
+                try {
+                    const cnData = await fetchAshareQuote(symbol);
+                    if (cnData) {
+                        symbol = cnData.symbol || symbol;
+                        name = cnData.name || name;
+                        data = {
+                            ...data,
+                            quote: cnData.quote || data.quote,
+                            quoteAvailable: !!(cnData.quote && cnData.quote.c !== null && cnData.quote.c !== undefined),
+                            quoteSource: cnData.quoteSource,
+                            profile: { ...(data.profile || {}), ...(cnData.profile || {}), name },
+                            cnFundamentals: cnData.fundamentals
+                        };
+                    }
+                } catch {}
+            }
 
             const q = data.quote;
             const hasQuote = data.quoteAvailable && q.c !== null && q.c !== undefined;
@@ -1517,10 +1583,10 @@
             }
             clearInterval(stockChartTimer);
             stockChartTimer = setInterval(async () => {
-                const fresh = await fetchFullStockData(symbol);
+                const fresh = isAshareSymbol(symbol) ? await fetchAshareQuote(symbol) : await fetchFullStockData(symbol);
                 if (!fresh || !document.getElementById('stock-price-chart')) return;
                 const fq = fresh.quote;
-                if (!fresh.quoteAvailable || fq.c === null || fq.c === undefined) return;
+                if ((!fresh.quoteAvailable && !isAshareSymbol(symbol)) || fq.c === null || fq.c === undefined) return;
                 const freshUp = Number(fq.dp) >= 0;
                 const freshColor = freshUp ? 'emerald' : 'red';
                 document.getElementById('search-price').textContent = formatQuotePrice(symbol, fq.c);
