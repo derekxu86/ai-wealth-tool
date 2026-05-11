@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 理财策略师 | Global Terminal</title>
+    <title>AI投资策略师 | Global Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -73,7 +73,7 @@
         <div class="p-5 sm:p-8 md:w-5/12 bg-[#18181b] border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col">
             <div class="mb-6 sm:mb-10">
                 <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white mb-2 flex items-center gap-2">
-                    <i class="ph ph-cpu text-blue-500"></i> <span data-i18n="title">AI 理财策略师</span>
+                    <i class="ph ph-cpu text-blue-500"></i> <span data-i18n="title">AI投资策略师</span>
                 </h1>
                 <p class="text-sm text-zinc-400 font-medium" data-i18n="subtitle">Global Macro Allocation Engine</p>
             </div>
@@ -347,7 +347,7 @@
 
         const i18n = {
             en: {
-                title: "AI Wealth Strategist", subtitle: "Global Macro Allocation Engine",
+                title: "AI Investment Strategist", subtitle: "Global Macro Allocation Engine",
                 initialCap: "Initial Capital", strategyArch: "Risk Profile",
                 cons: "Conservative", mod: "Moderate Core", agg: "Aggressive",
                 portStruct: "Structure", updates: "Auto-sync", netAsset: "AUM",
@@ -367,7 +367,7 @@
                 assets: { "Infrastructure & Power": "Infrastructure", "Dividend Equities": "Dividends", "Global Bonds": "Global Bonds", "Thematic Tech (AI/Semi)": "Tech (AI/Semi)", "Cloud & SaaS": "Cloud & SaaS", "Clean Infrastructure": "Clean Energy", "Cash/Fixed Income": "Cash/Fixed", "Frontier AI & GPU": "Frontier AI", "Biotech & Genomics": "Biotech", "DLE & Energy Tech": "Battery Tech" }
             },
             zh: {
-                title: "AI 理财策略师", subtitle: "全球宏观资产配置引擎",
+                title: "AI投资策略师", subtitle: "全球宏观资产配置引擎",
                 initialCap: "初始投资本金", strategyArch: "风险偏好模型",
                 cons: "保守固收", mod: "稳健核心", agg: "激进高弹性",
                 portStruct: "配置结构", updates: "实时网络同步", netAsset: "资管总额",
@@ -1044,19 +1044,10 @@
 
         function renderAshareInfoPanel(symbol, name) {
             if (!isAshareSymbol(symbol)) return '';
-            const gated = !isPremiumMember() ? `
-                <div class="mt-3">${premiumGateHtml('analysis')}</div>
-            ` : '';
             setTimeout(() => hydrateAshareInfo(symbol, name), 50);
             return `
-                <div class="mt-5 rounded-2xl border border-zinc-800 bg-[#09090b] p-4">
-                    <div class="flex items-center justify-between mb-3">
-                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${currentLang === 'zh' ? 'A股信息层' : 'A-Share Intelligence'}</p>
-                        <span class="text-[10px] text-zinc-600 font-bold">${currentLang === 'zh' ? '新闻 / 投研委员会' : 'News / Investment Committee'}</span>
-                    </div>
-                    <div id="a-share-info-tabs" class="grid gap-3 md:grid-cols-3">
-                        <div class="text-xs text-zinc-500 font-bold">${currentLang === 'zh' ? '正在读取东方财富公开源...' : 'Loading public sources...'}</div>
-                    </div>
+                <div id="a-share-info-tabs" class="mt-5 grid gap-3 md:grid-cols-3">
+                    <div class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4 text-xs text-zinc-500 font-bold">${currentLang === 'zh' ? '正在读取相关新闻...' : 'Loading related news...'}</div>
                 </div>
             `;
         }
@@ -1069,8 +1060,8 @@
                 ? rows.slice(0, 3).map(mapper).join('')
                 : `<p class="text-xs text-zinc-500 font-bold leading-relaxed">${emptyText}</p>`;
             box.innerHTML = `
-                <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
-                    <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '相关新闻' : 'News'}</p>
+                <div class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4">
+                    <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-3">${currentLang === 'zh' ? '相关新闻' : 'Related News'}</p>
                     ${renderRows(news, currentLang === 'zh' ? '公开新闻源暂未返回，先参考日线图和题材热度。' : 'No public news returned. Use chart and theme heat first.', item => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(item.title)}</p>`)}
                 </div>
                 ${renderInvestmentCommitteeLauncher(symbol, name, 'A-share')}
@@ -1206,15 +1197,15 @@
         function renderInvestmentCommitteeLauncher(symbol, name, market) {
             if (!isPremiumMember()) return `<div class="md:col-span-2">${premiumGateHtml('analysis')}</div>`;
             return `
-                <div id="investment-committee-box" class="rounded-xl border border-zinc-800 bg-[#050506] p-4 md:col-span-2">
+                <div id="investment-committee-box" class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4 md:col-span-2">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
-                            <p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest">${currentLang === 'zh' ? 'AI 投研委员会' : 'AI Investment Committee'}</p>
-                            <p class="mt-1 text-xs text-zinc-500 font-bold leading-relaxed">${currentLang === 'zh' ? '点击后再调用高级投研分析，避免打开个股时加载过慢。' : 'Load advanced research on demand so the stock profile opens faster.'}</p>
+                            <p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest">${currentLang === 'zh' ? 'AI 投研' : 'AI Research'}</p>
+                            <p class="mt-1 text-xs text-zinc-500 font-bold leading-relaxed">${currentLang === 'zh' ? '查看技术面、新闻面、基本面和风险判断。' : 'Review technicals, news, fundamentals, and risk view.'}</p>
                         </div>
                         <button class="shrink-0 rounded-xl border border-blue-500/40 bg-blue-500/10 px-4 py-2 text-xs font-black text-blue-300 hover:bg-blue-500/20 transition-colors"
                             onclick="loadInvestmentCommitteePanel('${escapeAttr(symbol)}', '${escapeAttr(name)}', '${escapeAttr(market)}')">
-                            ${currentLang === 'zh' ? '查看 AI 投研' : 'View AI Research'}
+                            ${currentLang === 'zh' ? '查看投研分析' : 'View Research'}
                         </button>
                     </div>
                 </div>
@@ -1230,7 +1221,7 @@
             }
             box.innerHTML = `
                 <div class="rounded-xl border border-zinc-800 bg-[#050506] p-4">
-                    <p class="text-sm text-zinc-400 font-bold"><i class="ph ph-circle-notch animate-spin text-blue-400 mr-2"></i>${currentLang === 'zh' ? '正在生成 AI 投研委员会分析...' : 'Generating AI investment committee analysis...'}</p>
+                    <p class="text-sm text-zinc-400 font-bold"><i class="ph ph-circle-notch animate-spin text-blue-400 mr-2"></i>${currentLang === 'zh' ? '正在生成投研分析...' : 'Generating research analysis...'}</p>
                 </div>
             `;
             const isA = market === 'A-share' || isAshareSymbol(symbol);
@@ -1246,14 +1237,8 @@
             if (isAshareSymbol(symbol)) return '';
             setTimeout(() => hydrateGlobalInfo(symbol, name), 50);
             return `
-                <div class="mt-5 rounded-2xl border border-zinc-800 bg-[#09090b] p-4">
-                    <div class="flex items-center justify-between mb-3">
-                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${currentLang === 'zh' ? '全球个股新闻层' : 'Global Stock News'}</p>
-                        <span class="text-[10px] text-zinc-600 font-bold">${currentLang === 'zh' ? '新闻 / 投研委员会' : 'News / Investment Committee'}</span>
-                    </div>
-                    <div id="global-stock-info-tabs" class="grid gap-3 md:grid-cols-3">
-                        <div class="text-xs text-zinc-500 font-bold">${currentLang === 'zh' ? '正在读取个股新闻...' : 'Loading company news...'}</div>
-                    </div>
+                <div id="global-stock-info-tabs" class="mt-5 grid gap-3 md:grid-cols-3">
+                    <div class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4 text-xs text-zinc-500 font-bold">${currentLang === 'zh' ? '正在读取相关新闻...' : 'Loading related news...'}</div>
                 </div>
             `;
         }
@@ -1281,8 +1266,8 @@
                 ? news.slice(0, 3).map(n => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(n.headline)}</p>`).join('')
                 : `<p class="text-xs text-zinc-500 font-bold leading-relaxed">${currentLang === 'zh' ? '个股新闻源暂未返回。' : 'No company news returned.'}</p>`;
             box.innerHTML = `
-                <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
-                    <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '相关新闻' : 'Company News'}</p>
+                <div class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4">
+                    <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-3">${currentLang === 'zh' ? '相关新闻' : 'Related News'}</p>
                     ${renderNews}
                 </div>
                 ${renderInvestmentCommitteeLauncher(symbol, name, 'Global')}
@@ -1676,7 +1661,7 @@
             if (!picks.length) {
                 container.innerHTML = `
                     <div class="md:col-span-3 rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 text-xs text-blue-200 leading-relaxed">
-                        ${currentLang === 'zh' ? 'AI 股票池暂未生成。请确认后端 OPENAI_API_KEY 有可用额度；底部热门资产仍可查看。' : 'AI picks are not available yet. Check that OPENAI_API_KEY has usable quota; bottom hot assets remain available.'}
+                        ${currentLang === 'zh' ? 'AI 股票池暂时未生成，可先参考底部热门资产与市场新闻。' : 'AI picks are temporarily unavailable. You can still review bottom hot assets and market news.'}
                     </div>
                 `;
                 renderAshareThemeRow();
