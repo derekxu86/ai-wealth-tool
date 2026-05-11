@@ -96,6 +96,22 @@
                         <span class="font-bold" data-i18n="agg">Aggressive</span><i class="ph ph-rocket-launch text-xl text-purple-500"></i>
                     </button>
                 </div>
+                <div id="hot-assets-panel" class="mt-5 bg-[#111113] border border-zinc-800/80 rounded-2xl p-3 sm:p-4">
+                    <div class="flex items-center justify-between gap-3 mb-3">
+                        <div>
+                            <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest" data-i18n="hotAssets">Hot Assets</p>
+                            <p class="text-[10px] text-zinc-600 font-bold mt-1" data-i18n="hotAssetsSub">Market heat + AI screen</p>
+                        </div>
+                        <i class="ph ph-fire text-orange-400 text-lg"></i>
+                    </div>
+                    <div id="hot-assets-list" class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                        <div class="text-xs text-zinc-500 font-bold" data-i18n="loading">Loading...</div>
+                    </div>
+                    <div id="a-share-theme-row" class="hidden mt-3 border-t border-zinc-800 pt-3">
+                        <p class="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-2">A股题材热度</p>
+                        <div id="a-share-theme-list" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -125,18 +141,6 @@
                     <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1" data-i18n="proj5y">5Y Proj.</p>
                     <p class="text-xl font-black text-white mb-1" id="forecast-5y">--</p>
                     <p class="text-xs font-bold text-emerald-400 flex items-center gap-1"><i class="ph ph-trend-up"></i> <span id="return-5y">--</span></p>
-                </div>
-            </div>
-            <div id="hot-assets-panel" class="mt-4 bg-[#18181b] border border-zinc-800/70 rounded-2xl p-3 sm:p-4">
-                <div class="flex items-center justify-between gap-3 mb-3">
-                    <div>
-                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest" data-i18n="hotAssets">Hot Assets</p>
-                        <p class="text-[10px] text-zinc-600 font-bold mt-1" data-i18n="hotAssetsSub">Market heat + AI screen</p>
-                    </div>
-                    <i class="ph ph-fire text-orange-400 text-lg"></i>
-                </div>
-                <div id="hot-assets-list" class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                    <div class="text-xs text-zinc-500 font-bold" data-i18n="loading">Loading...</div>
                 </div>
             </div>
         </div>
@@ -503,7 +507,7 @@
             document.getElementById('lang-toggle-text').textContent = currentLang === 'en' ? 'EN / 中文' : '中文 / EN';
             updateMemberStatus();
         }
-        function toggleLang() { currentLang = currentLang === 'en' ? 'zh' : 'en'; renderLang(); renderHotAssets(); updateDashboard(); }
+        function toggleLang() { currentLang = currentLang === 'en' ? 'zh' : 'en'; renderLang(); renderHotAssets(); renderAshareThemeRow(); updateDashboard(); }
 
         function isPremiumMember() {
             return userAccount && ['monthly', 'annual'].includes(userAccount.plan);
@@ -549,21 +553,15 @@
         function premiumGateHtml(feature = 'analysis') {
             const title = currentLang === 'zh' ? '会员可查看高级分析' : 'Premium analysis locked';
             const copy = currentLang === 'zh'
-                ? '普通用户不会触发付费智能接口。升级会员后可查看配置建议、新闻解析和买卖信号推理。'
-                : 'Free users do not trigger paid intelligence calls. Upgrade to unlock allocation advice, news analysis and signal reasoning.';
+                ? '升级后可查看配置建议、新闻解析和买卖信号推理。'
+                : 'Upgrade to unlock allocation advice, news analysis and signal reasoning.';
             const button = currentLang === 'zh' ? '成为会员' : 'Upgrade';
             return `
-                <div class="relative overflow-hidden rounded-xl border border-blue-500/30 bg-blue-500/10 p-4">
-                    <div class="premium-blur">
-                        <p class="text-sm font-black text-white">${feature === 'allocation' ? 'Portfolio thesis and current trend...' : 'Detailed decision reasoning, catalyst map and risk checkpoints...'}</p>
-                        <p class="mt-2 text-xs text-zinc-400">Market context, sector read-through, valuation pressure, momentum confirmation...</p>
-                    </div>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-4 bg-[#09090b]/70">
-                        <i class="ph ph-lock-key text-blue-400 text-2xl mb-2"></i>
-                        <p class="text-sm font-black text-white">${title}</p>
-                        <p class="mt-1 text-xs text-zinc-400 leading-relaxed">${copy}</p>
-                        <button onclick="openMembershipModal()" class="mt-3 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-400 text-white text-xs font-black">${button}</button>
-                    </div>
+                <div class="rounded-xl border border-blue-500/30 bg-blue-500/10 p-4 text-center">
+                    <i class="ph ph-lock-key text-blue-400 text-2xl mb-2"></i>
+                    <p class="text-sm font-black text-white">${title}</p>
+                    <p class="mt-1 text-xs text-zinc-400 leading-relaxed">${copy}</p>
+                    <button onclick="openMembershipModal()" class="mt-3 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-400 text-white text-xs font-black">${button}</button>
                 </div>
             `;
         }
@@ -793,6 +791,80 @@
             } catch { return []; }
         }
 
+        async function fetchAshareKlines(symbol) {
+            try {
+                const fields1 = 'f1,f2,f3,f4,f5,f6';
+                const fields2 = 'f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61';
+                const url = `https://push2his.eastmoney.com/api/qt/stock/kline/get?secid=${ashareSecid(symbol)}&fields1=${fields1}&fields2=${fields2}&klt=101&fqt=1&end=20500101&lmt=90`;
+                const data = await jsonpRequest(url);
+                return data?.data?.klines || [];
+            } catch {
+                return [];
+            }
+        }
+
+        function parseAshareKlines(klines) {
+            return (klines || []).map(item => {
+                const p = String(item).split(',');
+                return { date: p[0], open: +p[1], close: +p[2], high: +p[3], low: +p[4], volume: +p[5] };
+            }).filter(row => Number.isFinite(row.close) && Number.isFinite(row.high) && Number.isFinite(row.low));
+        }
+
+        function drawAshareKlineChart(klines) {
+            const canvas = document.getElementById('a-share-kline-canvas');
+            if (!canvas) return;
+            const holder = canvas.parentElement;
+            const box = holder.getBoundingClientRect();
+            const ratio = window.devicePixelRatio || 1;
+            const width = Math.max(320, box.width);
+            const height = Math.max(220, box.height);
+            canvas.width = Math.floor(width * ratio);
+            canvas.height = Math.floor(height * ratio);
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${height}px`;
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+            ctx.clearRect(0, 0, width, height);
+            const rows = parseAshareKlines(klines).slice(-70);
+            if (!rows.length) {
+                ctx.fillStyle = '#71717a';
+                ctx.font = '700 13px Inter, sans-serif';
+                ctx.fillText(currentLang === 'zh' ? '东方财富暂未返回K线数据' : 'Eastmoney did not return K-line data', 16, 32);
+                return;
+            }
+            const min = Math.min(...rows.map(x => x.low));
+            const max = Math.max(...rows.map(x => x.high));
+            const padX = 18;
+            const padY = 22;
+            const plotH = height - padY * 2;
+            const y = value => height - padY - ((value - min) / (max - min || 1)) * plotH;
+            const step = (width - padX * 2) / rows.length;
+            ctx.strokeStyle = '#27272a';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 4; i++) {
+                const gy = padY + i * plotH / 3;
+                ctx.beginPath();
+                ctx.moveTo(padX, gy);
+                ctx.lineTo(width - padX, gy);
+                ctx.stroke();
+            }
+            rows.forEach((d, i) => {
+                const x = padX + i * step + step / 2;
+                const up = d.close >= d.open;
+                const color = up ? '#22c55e' : '#ef4444';
+                ctx.strokeStyle = color;
+                ctx.fillStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(x, y(d.high));
+                ctx.lineTo(x, y(d.low));
+                ctx.stroke();
+                const top = Math.min(y(d.open), y(d.close));
+                const bodyH = Math.max(2, Math.abs(y(d.open) - y(d.close)));
+                const bodyW = Math.max(4, step * 0.56);
+                ctx.fillRect(x - bodyW / 2, top, bodyW, bodyH);
+            });
+        }
+
         function renderAshareInfoPanel(symbol, name) {
             if (!isAshareSymbol(symbol)) return '';
             const gated = !isPremiumMember() ? `
@@ -805,6 +877,13 @@
                         <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${currentLang === 'zh' ? 'A股信息层' : 'A-Share Intelligence'}</p>
                         <span class="text-[10px] text-zinc-600 font-bold">${currentLang === 'zh' ? '新闻 / 研报 / 评级' : 'News / Research / Rating'}</span>
                     </div>
+                    <div class="mb-3 rounded-xl border border-zinc-800 overflow-hidden bg-[#050506]">
+                        <div class="flex items-center justify-between px-3 py-2 border-b border-zinc-800">
+                            <p class="text-[10px] text-zinc-500 font-black uppercase tracking-widest">${currentLang === 'zh' ? '日线蜡烛图' : 'Daily Candles'}</p>
+                            <span class="text-[10px] text-red-400 font-bold">${currentLang === 'zh' ? '东方财富' : 'Eastmoney'}</span>
+                        </div>
+                        <div class="h-64 p-3"><canvas id="a-share-kline-canvas" class="block w-full h-full"></canvas></div>
+                    </div>
                     <div id="a-share-info-tabs" class="grid gap-3 md:grid-cols-3">
                         <div class="text-xs text-zinc-500 font-bold">${currentLang === 'zh' ? '正在读取东方财富公开源...' : 'Loading public sources...'}</div>
                     </div>
@@ -816,7 +895,8 @@
         async function hydrateAshareInfo(symbol, name) {
             const box = document.getElementById('a-share-info-tabs');
             if (!box) return;
-            const [news, reports] = await Promise.all([fetchAshareNews(name, symbol), fetchAshareReports(symbol)]);
+            const [news, reports, klines] = await Promise.all([fetchAshareNews(name, symbol), fetchAshareReports(symbol), fetchAshareKlines(symbol)]);
+            requestAnimationFrame(() => drawAshareKlineChart(klines));
             const ratingRows = reports.filter(r => r.rating || r.org).slice(0, 3);
             const renderRows = (rows, emptyText, mapper) => rows.length
                 ? rows.slice(0, 3).map(mapper).join('')
@@ -1050,9 +1130,11 @@
                     isTheme: true
                 })).filter(x => x.name);
                 renderHotAssets();
+                renderAshareThemeRow();
             } catch {
                 latestAshareThemes = [];
                 renderHotAssets();
+                renderAshareThemeRow();
             }
         }
 
@@ -1097,13 +1179,6 @@
         }
 
         function hotAssetCandidates() {
-            const ashareThemes = currentLang === 'zh'
-                ? (latestAshareThemes || []).map(item => ({
-                    ...item,
-                    category: 'A股热门板块',
-                    tag: item.tag || '题材热度 / 龙头观察'
-                }))
-                : [];
             const pulse = (latestMarketPulse || []).map(item => {
                 const q = item.quote;
                 const change = Number(q?.dp) || 0;
@@ -1135,7 +1210,7 @@
             }));
 
             const unique = new Map();
-            [...ashareThemes, ...flattened, ...pulse].forEach(item => {
+            [...flattened, ...pulse].forEach(item => {
                 if (!item.symbol) return;
                 const key = item.symbol.toUpperCase();
                 const existing = unique.get(key);
@@ -1206,6 +1281,32 @@
                             <span class="text-[10px] text-orange-300 font-black">${Math.max(0, Math.min(100, Number(item.score) || 0))}/100</span>
                         </div>
                         <p class="mt-1 text-[10px] text-zinc-600 font-bold truncate">${escapeAttr(item.tag)}</p>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function renderAshareThemeRow() {
+            const row = document.getElementById('a-share-theme-row');
+            const list = document.getElementById('a-share-theme-list');
+            if (!row || !list) return;
+            if (currentLang !== 'zh' || !latestAshareThemes.length) {
+                row.classList.add('hidden');
+                list.innerHTML = '';
+                return;
+            }
+            row.classList.remove('hidden');
+            list.innerHTML = latestAshareThemes.slice(0, 8).map(item => {
+                const up = Number(item.quote?.dp) >= 0;
+                const change = Number.isFinite(Number(item.quote?.dp)) ? `${up ? '+' : ''}${Number(item.quote.dp).toFixed(2)}%` : `${item.score}/100`;
+                return `
+                    <button class="min-w-[150px] text-left rounded-xl border border-zinc-800 bg-[#09090b] px-3 py-2 hover:border-emerald-400/50 hover:bg-zinc-900 transition-colors"
+                        onclick="openStockAnalysis('${escapeAttr(item.symbol)}', '${escapeAttr(item.name)}')">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-black text-white truncate">${escapeAttr(item.name)}</span>
+                            <span class="text-xs font-black ${up ? 'text-emerald-400' : 'text-red-400'}">${change}</span>
+                        </div>
+                        <p class="mt-1 text-[10px] text-zinc-500 font-bold truncate">${escapeAttr(item.displaySymbol || item.symbol)} · 题材热度</p>
                     </button>
                 `;
             }).join('');
@@ -1370,8 +1471,18 @@
         }
         function localSearch(query) {
             const q = query.toUpperCase();
-            return fallbackTickers
-                .filter(r => r.symbol.includes(q) || r.description.toUpperCase().includes(q))
+            const zhAshareAliases = [
+                { symbol: '600519.SS', description: '贵州茅台', aliases: 'GZMT MT KWEICHOW MOUTAI' },
+                { symbol: '601318.SS', description: '中国平安', aliases: 'ZGPA PA PINGAN PING AN INSURANCE' },
+                { symbol: '600036.SS', description: '招商银行', aliases: 'ZSYH CMB CHINA MERCHANTS BANK' },
+                { symbol: '000001.SZ', description: '平安银行', aliases: 'PAYH PAB PING AN BANK' },
+                { symbol: '000858.SZ', description: '五粮液', aliases: 'WLY WULIANGYE' },
+                { symbol: '002626.SZ', description: '金达威', aliases: 'JDW KINGDOMWAY' },
+                { symbol: '300750.SZ', description: '宁德时代', aliases: 'NDSD CATL CONTEMPORARY AMPEREX' }
+            ];
+            return [...zhAshareAliases, ...fallbackTickers]
+                .filter((r, index, arr) => arr.findIndex(x => x.symbol === r.symbol) === index)
+                .filter(r => r.symbol.includes(q) || r.description.toUpperCase().includes(q) || String(r.aliases || '').toUpperCase().includes(q))
                 .slice(0, 8);
         }
         async function quickAshareSearch(query) {
