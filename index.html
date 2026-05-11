@@ -174,6 +174,15 @@
         </div>
     </div>
 
+    <div class="max-w-5xl w-full mt-4 bg-[#18181b] border border-zinc-800 px-3 sm:px-4 py-3 rounded-2xl">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+            <span class="flex-shrink-0 text-[10px] font-black bg-red-500/10 text-red-400 px-2 py-1 rounded border border-red-500/20 uppercase tracking-widest" data-i18n="cnThemeHeat">A-Share Themes</span>
+            <div id="a-share-theme-content" class="flex flex-1 gap-2 text-xs overflow-x-auto no-scrollbar">
+                <div class="text-zinc-500 font-bold" data-i18n="loading">Loading...</div>
+            </div>
+        </div>
+    </div>
+
     <div id="drilldown-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-md p-4">
         <div class="modal-content w-full max-w-lg bg-[#18181b] rounded-2xl border border-zinc-700 shadow-2xl flex flex-col max-h-[90vh]">
             <div class="px-6 py-4 border-b border-zinc-800 flex justify-between items-center bg-[#111113]">
@@ -310,6 +319,7 @@
                 marketInsight: "Market Insight", newsSummaryLabel: "AI Executive Summary",
                 aiTradingSignal: "AI Trading Analysis", confidence: "Confidence", aiSignalAnalysis: "AI Analysis",
                 hotAssets: "Hot Assets", hotAssetsSub: "Market heat + AI screen", loading: "Loading...",
+                cnThemeHeat: "A-Share Themes",
                 memberTitle: "Member Access", memberHeadline: "Unlock premium decision analysis",
                 memberCopy: "Free users can view market prices, charts, news headlines and basic data. Premium members unlock AI allocation, news analysis and trading signal reasoning.",
                 monthlyPlan: "Monthly", annualPlan: "Annual", annualSave: "Save 20%", freeSignin: "Continue as free user", billingNote: "Demo billing state only. Connect Stripe plus Supabase/Firebase before accepting real payments.",
@@ -329,6 +339,7 @@
                 marketInsight: "市场洞察", newsSummaryLabel: "AI 深度摘要",
                 aiTradingSignal: "AI 交易分析", confidence: "信心指数", aiSignalAnalysis: "AI 分析",
                 hotAssets: "热门投资资产", hotAssetsSub: "市场热度 + AI 筛选", loading: "加载中...",
+                cnThemeHeat: "今日题材热度",
                 memberTitle: "会员权限", memberHeadline: "解锁高级决策分析",
                 memberCopy: "普通用户可以查看价格、图表、新闻标题和基础数据。会员可以使用 AI 配置、新闻解析和交易信号推理。",
                 monthlyPlan: "月付会员", annualPlan: "年付会员", annualSave: "省 20%", freeSignin: "以普通用户继续", billingNote: "当前是演示会员状态。正式收款前需要接 Stripe 和 Supabase/Firebase。",
@@ -748,6 +759,93 @@
             `;
         }
 
+        async function fetchAshareNews(name, symbol) {
+            try {
+                const keyword = name || ashareCode(symbol);
+                const param = {
+                    uid: '',
+                    keyword,
+                    type: ['cmsArticleWebOld'],
+                    client: 'web',
+                    clientType: 'web',
+                    param: { cmsArticleWebOld: { searchScope: 'default', sort: 'default', pageIndex: 1, pageSize: 4 } }
+                };
+                const url = `https://search-api-web.eastmoney.com/search/jsonp?param=${encodeURIComponent(JSON.stringify(param))}`;
+                const data = await jsonpRequest(url);
+                const list = data?.result?.cmsArticleWebOld || data?.result?.cmsArticleWebOld?.data || [];
+                return Array.isArray(list) ? list.slice(0, 4).map(item => ({
+                    title: String(item.title || item.Title || item.name || '').replace(/<[^>]+>/g, ''),
+                    summary: String(item.content || item.summary || item.showTime || item.source || '东方财富').replace(/<[^>]+>/g, '')
+                })).filter(x => x.title) : [];
+            } catch { return []; }
+        }
+
+        function reportDate(offsetDays = 365) {
+            const d = new Date(Date.now() - offsetDays * 86400000);
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        async function fetchAshareReports(symbol) {
+            try {
+                const code = ashareCode(symbol);
+                const cb = `datatable${Date.now()}`;
+                const url = `https://reportapi.eastmoney.com/report/list?cb=${cb}&industryCode=*&pageSize=5&industry=*&rating=&ratingChange=&beginTime=${reportDate(365)}&endTime=${reportDate(0)}&pageNo=1&fields=&qType=0&orgCode=&code=${code}&rcode=&p=1&pageNum=1`;
+                const data = await jsonpRequest(url, 'cb');
+                const rows = data?.data || data?.Data || data?.result?.data || [];
+                return Array.isArray(rows) ? rows.slice(0, 5).map(r => ({
+                    title: String(r.title || r.TITLE || r.reportName || r.REPORT_NAME || '研报标题未返回').replace(/<[^>]+>/g, ''),
+                    org: r.orgSName || r.ORG_S_NAME || r.orgName || r.ORG_NAME || '',
+                    rating: r.emRatingName || r.EM_RATING_NAME || r.rating || r.RATING || '',
+                    date: r.publishDate || r.PUBLISH_DATE || '',
+                    targetPrice: r.targetPrice || r.TARGET_PRICE || ''
+                })) : [];
+            } catch { return []; }
+        }
+
+        function renderAshareInfoPanel(symbol, name) {
+            if (!isAshareSymbol(symbol)) return '';
+            const gated = !isPremiumMember() ? `
+                <div class="mt-3">${premiumGateHtml('analysis')}</div>
+            ` : '';
+            setTimeout(() => hydrateAshareInfo(symbol, name), 50);
+            return `
+                <div class="mt-5 rounded-2xl border border-zinc-800 bg-[#09090b] p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${currentLang === 'zh' ? 'A股信息层' : 'A-Share Intelligence'}</p>
+                        <span class="text-[10px] text-zinc-600 font-bold">${currentLang === 'zh' ? '新闻 / 研报 / 评级' : 'News / Research / Rating'}</span>
+                    </div>
+                    <div id="a-share-info-tabs" class="grid gap-3 md:grid-cols-3">
+                        <div class="text-xs text-zinc-500 font-bold">${currentLang === 'zh' ? '正在读取东方财富公开源...' : 'Loading public sources...'}</div>
+                    </div>
+                    ${gated}
+                </div>
+            `;
+        }
+
+        async function hydrateAshareInfo(symbol, name) {
+            const box = document.getElementById('a-share-info-tabs');
+            if (!box) return;
+            const [news, reports] = await Promise.all([fetchAshareNews(name, symbol), fetchAshareReports(symbol)]);
+            const ratingRows = reports.filter(r => r.rating || r.org).slice(0, 3);
+            const renderRows = (rows, emptyText, mapper) => rows.length
+                ? rows.slice(0, 3).map(mapper).join('')
+                : `<p class="text-xs text-zinc-500 font-bold leading-relaxed">${emptyText}</p>`;
+            box.innerHTML = `
+                <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
+                    <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '新闻' : 'News'}</p>
+                    ${renderRows(news, currentLang === 'zh' ? '公开新闻源暂未返回。' : 'No public news returned.', item => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(item.title)}</p>`)}
+                </div>
+                <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
+                    <p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '研报' : 'Research'}</p>
+                    ${renderRows(reports, currentLang === 'zh' ? '公开研报源暂未返回。' : 'No public research returned.', item => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(item.title)}<br><span class="text-zinc-600">${escapeAttr(item.org || item.date || '')}</span></p>`)}
+                </div>
+                <div class="rounded-xl border border-zinc-800 bg-[#050506] p-3">
+                    <p class="text-[10px] text-amber-400 font-black uppercase tracking-widest mb-2">${currentLang === 'zh' ? '机构评级' : 'Rating'}</p>
+                    ${renderRows(ratingRows, currentLang === 'zh' ? '公开评级字段暂未返回。' : 'No public rating returned.', item => `<p class="text-xs text-zinc-300 font-bold leading-snug mb-2">${escapeAttr(item.org || '机构')} · ${escapeAttr(item.rating || '评级未披露')}<br><span class="text-zinc-600">${escapeAttr(item.date || '')}</span></p>`)}
+                </div>
+            `;
+        }
+
         async function fetchAITradingSignal(payload) {
             if (!isPremiumMember()) return null;
             for (const endpoint of OPENAI_SIGNAL_ENDPOINTS) {
@@ -870,6 +968,67 @@
                 || await fetchTwelveQuote(item.symbol)
                 || (item.fallbackSymbol ? await fetchFinnhubQuote(item.fallbackSymbol) : null)
                 || (item.fallbackSymbol ? await fetchTwelveQuote(item.fallbackSymbol) : null);
+        }
+
+        function jsonpRequest(url, cbParam = 'cb') {
+            return new Promise((resolve, reject) => {
+                const cb = `jsonp_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+                const script = document.createElement('script');
+                const sep = url.includes('?') ? '&' : '?';
+                window[cb] = data => {
+                    delete window[cb];
+                    script.remove();
+                    resolve(data);
+                };
+                script.onerror = () => {
+                    delete window[cb];
+                    script.remove();
+                    reject(new Error('jsonp failed'));
+                };
+                script.src = `${url}${sep}${cbParam}=${cb}`;
+                document.body.appendChild(script);
+            });
+        }
+
+        function isAshareSymbol(symbol) {
+            return /\.SS$|\.SZ$/.test(String(symbol || '').toUpperCase()) || /^[036]\d{5}$/.test(String(symbol || ''));
+        }
+
+        function ashareCode(symbol) {
+            return String(symbol || '').toUpperCase().replace('.SS', '').replace('.SZ', '');
+        }
+
+        function ashareSecid(symbol) {
+            const code = ashareCode(symbol);
+            return `${/^6|^9/.test(code) ? '1' : '0'}.${code}`;
+        }
+
+        async function loadAshareThemeHeat() {
+            const container = document.getElementById('a-share-theme-content');
+            if (!container) return;
+            try {
+                const fields = 'f12,f14,f3,f128,f136';
+                const url = `https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=8&po=1&np=1&fltt=2&invt=2&fid=f3&fs=m:90+t:3&fields=${fields}`;
+                const data = await jsonpRequest(url);
+                const rows = data?.data?.diff || [];
+                if (!rows.length) throw new Error('empty');
+                container.innerHTML = rows.map(row => {
+                    const up = Number(row.f3) >= 0;
+                    const leader = row.f128 || row.f136 || '';
+                    const click = leader && /^\d{6}$/.test(String(leader)) ? `onclick="openStockAnalysis('${leader}', '${escapeAttr(row.f14)}')"` : '';
+                    return `
+                        <button title="${escapeAttr(row.f14)}" class="min-w-[128px] text-left bg-[#09090b] border border-zinc-800 rounded-lg px-2 py-2 hover:border-red-400/50 transition-colors" ${click}>
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="font-black text-zinc-300 truncate">${escapeAttr(row.f14)}</span>
+                                <span class="font-black ${up ? 'text-emerald-400' : 'text-red-400'}">${up ? '+' : ''}${Number(row.f3 || 0).toFixed(2)}%</span>
+                            </div>
+                            <div class="mt-1 text-zinc-500 font-bold truncate">${leader ? (currentLang === 'zh' ? '龙头 ' : 'Lead ') + leader : (currentLang === 'zh' ? '题材热度' : 'Theme heat')}</div>
+                        </button>
+                    `;
+                }).join('');
+            } catch {
+                container.innerHTML = `<div class="text-red-400 font-bold">${currentLang === 'zh' ? '题材热度加载失败，可继续使用股票搜索。' : 'Theme heat unavailable.'}</div>`;
+            }
         }
 
         async function renderMarketPulse() {
@@ -1328,6 +1487,7 @@
                         <p class="text-sm font-bold text-white">${ai.risk}</p>
                     </div>
                 </div>
+                ${renderAshareInfoPanel(symbol, name)}
             `;
             renderStockSparkline(symbol, q);
             renderTechnicalFallback(symbol, hasQuote ? q.dp : 0);
@@ -1812,9 +1972,11 @@
         fetchMarketNews(); 
         renderMarketPulse();
         fetchMarketScan();
+        loadAshareThemeHeat();
         setInterval(fetchMarketNews, 600000);
         setInterval(renderMarketPulse, 120000);
         setInterval(fetchMarketScan, 300000);
+        setInterval(loadAshareThemeHeat, 300000);
     </script>
 </body>
 </html>
