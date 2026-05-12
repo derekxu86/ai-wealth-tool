@@ -215,7 +215,7 @@
         </div>
     </div>
 
-    <p class="max-w-5xl w-full mb-4 text-[10px] text-zinc-600 leading-relaxed px-2">
+    <p class="max-w-5xl w-full mb-4 text-[10px] text-zinc-600 leading-relaxed px-2" data-i18n="riskDisclaimer">
         投资有风险，入市需谨慎。本产品仅用于市场研究和教育演示，不构成任何投资建议；数据可能延迟或不完整。
     </p>
 
@@ -362,6 +362,7 @@
                 memberCopy: "Free users can view market prices, charts, news headlines and basic data. Premium members unlock AI allocation, news analysis and trading signal reasoning.",
                 monthlyPlan: "Monthly", annualPlan: "Annual", annualSave: "Save 20%", freeSignin: "Continue as free user", billingNote: "Demo billing state only. Connect Stripe plus Supabase/Firebase before accepting real payments.",
                 allocationPrompt: "I have 20,000, higher risk tolerance, and want AI plus energy exposure.",
+                riskDisclaimer: "Investing involves risk. This product is for market research and educational demonstration only, does not constitute investment advice, and data may be delayed or incomplete.",
                 segmentAlloc: "Segment Allocation", portWeight: "Weight",
                 metrics: { ind: "Sector/Industry", rate: "Wall St. Rating", heat: "Market Heat", exp: "Momentum", idx: "AI Conviction", risk: "Risk Level" },
                 assets: { "Infrastructure & Power": "Infrastructure", "Dividend Equities": "Dividends", "Global Bonds": "Global Bonds", "Thematic Tech (AI/Semi)": "Tech (AI/Semi)", "Cloud & SaaS": "Cloud & SaaS", "Clean Infrastructure": "Clean Energy", "Cash/Fixed Income": "Cash/Fixed", "Frontier AI & GPU": "Frontier AI", "Biotech & Genomics": "Biotech", "DLE & Energy Tech": "Battery Tech" }
@@ -382,6 +383,7 @@
                 memberCopy: "普通用户可以查看价格、图表、新闻标题和基础数据。会员可以使用 AI 配置、新闻解析和交易信号推理。",
                 monthlyPlan: "月付会员", annualPlan: "年付会员", annualSave: "省 20%", freeSignin: "以普通用户继续", billingNote: "当前是演示会员状态。正式收款前需要接 Stripe 和 Supabase/Firebase。",
                 allocationPrompt: "我有2万块，风险偏高，想投 AI 和能源",
+                riskDisclaimer: "投资有风险，入市需谨慎。本产品仅用于市场研究和教育演示，不构成任何投资建议；数据可能延迟或不完整。",
                 segmentAlloc: "板块分配额度", portWeight: "组合占比",
                 metrics: { ind: "所属行业", rate: "专业评级", heat: "市场热度", exp: "爆发力 (动量)", idx: "AI 投资指数", risk: "风险度评估" },
                 assets: { "Infrastructure & Power": "基建与电力", "Dividend Equities": "红利蓝筹", "Global Bonds": "全球高分红债", "Thematic Tech (AI/Semi)": "核心科技 (AI/半导体)", "Cloud & SaaS": "云计算与SaaS", "Clean Infrastructure": "清洁能源基建", "Cash/Fixed Income": "现金等价物", "Frontier AI & GPU": "前沿AI与GPU", "Biotech & Genomics": "前沿生物科技", "DLE & Energy Tech": "直提锂与新能源" }
@@ -649,13 +651,27 @@
         };
 
         function premiumGateHtml(feature = 'analysis') {
-            const title = currentLang === 'zh' ? '会员可查看高级分析' : 'Premium analysis locked';
-            const copy = currentLang === 'zh'
-                ? '升级后可查看配置建议、新闻解析和买卖信号推理。'
-                : 'Upgrade to unlock allocation advice, news analysis and signal reasoning.';
+            const titles = {
+                signal: currentLang === 'zh' ? '交易信号需会员查看' : 'Trading signal is premium',
+                news: currentLang === 'zh' ? '新闻深度分析需会员查看' : 'News analysis is premium',
+                research: currentLang === 'zh' ? 'AI 投研需会员查看' : 'AI research is premium',
+                picks: currentLang === 'zh' ? 'AI 股票池需会员查看' : 'AI picks are premium',
+                allocation: currentLang === 'zh' ? 'AI 配置建议需会员查看' : 'AI allocation is premium',
+                analysis: currentLang === 'zh' ? '会员可查看高级分析' : 'Premium analysis locked'
+            };
+            const copies = {
+                signal: currentLang === 'zh' ? '升级后可查看买卖判断、信心指数和交易理由。' : 'Upgrade to view buy/sell view, confidence and signal reasoning.',
+                news: currentLang === 'zh' ? '升级后可查看行业影响、相关股票和市场传导逻辑。' : 'Upgrade to view sector impact, related tickers and market read-through.',
+                research: currentLang === 'zh' ? '升级后可查看技术面、新闻面、基本面、风险和多空观点。' : 'Upgrade to view technicals, news, fundamentals, risk and bull/bear views.',
+                picks: currentLang === 'zh' ? '升级后可生成结合基本面、技术面和风险的股票池。' : 'Upgrade to rank candidates using fundamentals, technicals and risk.',
+                allocation: currentLang === 'zh' ? '升级后可查看组合配置建议和调仓逻辑。' : 'Upgrade to view allocation suggestions and portfolio rationale.',
+                analysis: currentLang === 'zh' ? '升级后可查看配置建议、新闻解析和买卖信号推理。' : 'Upgrade to unlock allocation advice, news analysis and signal reasoning.'
+            };
+            const title = titles[feature] || titles.analysis;
+            const copy = copies[feature] || copies.analysis;
             const button = currentLang === 'zh' ? '成为会员' : 'Upgrade';
             return `
-                <div class="rounded-xl border border-blue-500/30 bg-blue-500/10 p-4 text-center">
+                <div class="w-full max-w-full rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 text-center">
                     <i class="ph ph-lock-key text-blue-400 text-2xl mb-2"></i>
                     <p class="text-sm font-black text-white">${title}</p>
                     <p class="mt-1 text-xs text-zinc-400 leading-relaxed">${copy}</p>
@@ -1198,7 +1214,12 @@
         }
 
         function renderInvestmentCommitteeLauncher(symbol, name, market) {
-            if (!isPremiumMember()) return `<div class="md:col-span-2">${premiumGateHtml('analysis')}</div>`;
+            if (!isPremiumMember()) return `
+                <div class="rounded-2xl border border-zinc-800 bg-[#09090b] p-4 md:col-span-2">
+                    <p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest mb-3">${currentLang === 'zh' ? 'AI 投研' : 'AI Research'}</p>
+                    ${premiumGateHtml('research')}
+                </div>
+            `;
             return `
                 <div id="investment-committee-box" class="relative overflow-hidden rounded-2xl border border-blue-500/40 bg-gradient-to-br from-blue-500/15 via-[#0b1120] to-[#09090b] p-4 md:col-span-2 shadow-[0_0_30px_rgba(59,130,246,0.10)]">
                     <div class="absolute right-4 top-4 text-blue-400/40 text-3xl"><i class="ph ph-sparkle"></i></div>
@@ -1685,7 +1706,7 @@
             const container = document.getElementById('ai-picks-list');
             if (!container) return;
             if (!isPremiumMember()) {
-                container.innerHTML = `<div class="md:col-span-3">${premiumGateHtml('analysis')}</div>`;
+                container.innerHTML = `<div class="md:col-span-3">${premiumGateHtml('picks')}</div>`;
                 renderAshareThemeRow();
                 return;
             }
@@ -1701,8 +1722,8 @@
                     container.innerHTML = `
                         <div class="md:col-span-3 rounded-2xl border border-blue-500/30 bg-blue-500/10 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                             <div>
-                                <p class="text-sm font-black text-white">${currentLang === 'zh' ? '候选池已更新' : 'Candidate pool updated'}</p>
-                                <p class="mt-1 text-xs text-blue-100/75 font-bold">${currentLang === 'zh' ? '点击后生成结合基本面、技术面和风险的 AI 股票池。' : 'Click to rank candidates using fundamentals, technicals, and risk.'}</p>
+                                <p class="text-sm font-black text-white">${currentLang === 'zh' ? '行情候选池已更新' : 'Market candidate pool updated'}</p>
+                                <p class="mt-1 text-xs text-blue-100/75 font-bold">${currentLang === 'zh' ? '下方股票来自行情热度、涨跌幅和成交活跃度筛选；点击按钮后才生成 AI 股票池。' : 'The names below come from quote momentum, price change and activity screens; click the button to generate AI picks.'}</p>
                             </div>
                             <button onclick="loadAiPicks()" class="rounded-xl bg-blue-500 px-5 py-3 text-xs font-black text-white hover:bg-blue-400">${currentLang === 'zh' ? '生成 AI 股票池' : 'Generate AI Picks'}</button>
                         </div>
@@ -1720,7 +1741,7 @@
                                         </div>
                                         <span class="text-xs font-black ${q ? (up ? 'text-emerald-400' : 'text-red-400') : 'text-blue-400'}">${change}</span>
                                     </div>
-                                    <p class="mt-2 text-[10px] text-zinc-500 font-bold">${currentLang === 'zh' ? '市场候选，不是最终 AI 评级' : 'Market candidate, not final AI rating'}</p>
+                                    <p class="mt-2 text-[10px] text-zinc-500 font-bold">${currentLang === 'zh' ? '行情候选，未使用 AI 分析' : 'Market candidate, AI analysis not used'}</p>
                                 </button>
                             `;
                         }).join('')}
@@ -2026,9 +2047,9 @@
 
             if (currentLang === 'zh') {
                 const vectorZh = vectors.length ? vectors.join('、') : '全球股票、利率和整体风险偏好';
-                return `${originalSummary ? `原文摘要：${originalSummary} ` : ''}AI 解读：这条新闻的市场语气属于${zhTone}。最相关的市场向量是${vectorZh}。对投资组合的潜在影响主要集中在${zhAssetImpact}。对 AI 投资策略师来说，关键不是单条新闻本身，而是它是否会持续改变盈利预期、折现率或板块领导力。接下来应该观察${zhWatch}。如果该信号连续几个交易日延续，portfolio agent 会倾向于逐步调整敞口，而不是因为单一 headline 立刻大幅调仓。`;
+                return `${originalSummary ? `原文摘要：${originalSummary} ` : ''}简要摘要：这条新闻的市场语气属于${zhTone}。相关市场方向包括${vectorZh}，潜在影响主要集中在${zhAssetImpact}。后续可观察${zhWatch}，确认该信号是短线情绪扰动，还是会持续影响盈利预期、折现率或板块轮动。`;
             }
-            return `${originalSummary ? originalSummary + ' ' : ''}AI read-through: this headline is ${tone}. The most relevant market vectors are ${sectorText}. Potential portfolio impact is concentrated in ${assetImpact}. For an AI allocation engine, the key question is whether this is a one-day sentiment move or a durable change in earnings expectations, discount rates, or sector leadership. Watch ${watch}. If the signal persists for several sessions, the portfolio agent would consider adjusting exposure gradually rather than making a full rebalance from a single headline.`;
+            return `${originalSummary ? originalSummary + ' ' : ''}Brief summary: this headline is ${tone}. The most relevant market vectors are ${sectorText}. Potential portfolio impact is concentrated in ${assetImpact}. Watch ${watch} to judge whether this is a short-term sentiment move or a durable change in earnings expectations, discount rates, or sector leadership.`;
         }
 
         // --- 全局搜索 ---
@@ -2405,12 +2426,34 @@
             document.getElementById('news-summary').innerHTML = `<span class="text-blue-400 font-bold"><i class="ph ph-circle-notch animate-spin mr-1"></i>${currentLang === 'zh' ? '正在生成新闻分析...' : 'Generating news analysis...'}</span>`;
             const aiNews = await fetchAINewsAnalysis(n);
             if (aiNews) {
-                document.getElementById('news-summary').textContent = aiNews.analysis;
+                document.getElementById('news-summary').innerHTML = renderDetailedNewsAnalysis(aiNews);
                 document.getElementById('news-related').innerHTML = renderNewsImpactTags(aiNews, extracted);
             } else {
                 document.getElementById('news-summary').textContent = buildNewsAnalysis(n);
             }
         };
+
+        function renderDetailedNewsAnalysis(aiNews) {
+            const text = cleanAIText(aiNews.analysis, 900);
+            const sentences = text.match(/[^.!?。！？]+[.!?。！？]?/g) || [text];
+            const labels = currentLang === 'zh'
+                ? ['事件影响', '行业传导', '相关资产', '观察重点']
+                : ['Event Impact', 'Sector Read-through', 'Related Assets', 'What to Watch'];
+            const chunks = labels.map((label, i) => ({
+                label,
+                body: cleanAIText(sentences.slice(i * 2, i * 2 + 2).join(' ') || sentences[i] || text, 220)
+            }));
+            return `
+                <div class="grid gap-3">
+                    ${chunks.map(item => `
+                        <div class="rounded-xl border border-zinc-800 bg-[#09090b] p-3">
+                            <p class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-1">${escapeAttr(item.label)}</p>
+                            <p class="text-sm text-zinc-300 leading-relaxed">${escapeAttr(item.body)}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
 
         function renderNewsImpactTags(aiNews, fallbackTags = []) {
             const industries = Array.isArray(aiNews.industries) ? aiNews.industries : [];
