@@ -13,6 +13,10 @@
         
         .pulse-green { animation: pulse-animation 2s infinite; }
         @keyframes pulse-animation { 0% { box-shadow: 0 0 0 0px rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0px rgba(34, 197, 94, 0); } }
+        .pulse-yellow { animation: pulse-yellow-animation 2s infinite; }
+        @keyframes pulse-yellow-animation { 0% { box-shadow: 0 0 0 0px rgba(234, 179, 8, 0.65); } 70% { box-shadow: 0 0 0 6px rgba(234, 179, 8, 0); } 100% { box-shadow: 0 0 0 0px rgba(234, 179, 8, 0); } }
+        .pulse-red { animation: pulse-red-animation 2s infinite; }
+        @keyframes pulse-red-animation { 0% { box-shadow: 0 0 0 0px rgba(239, 68, 68, 0.65); } 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0px rgba(239, 68, 68, 0); } }
 
         .modal-content { transform: scale(0.95); opacity: 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         .show .modal-content { transform: scale(1); opacity: 1; }
@@ -60,8 +64,8 @@
                 <ul id="search-dropdown" class="absolute top-full left-0 w-full mt-2 bg-[#18181b] border border-zinc-700 rounded-xl shadow-2xl overflow-hidden hidden max-h-64 overflow-y-auto no-scrollbar z-50"></ul>
             </div>
             <div class="hidden sm:flex items-center gap-2 bg-[#18181b] px-3 py-1.5 rounded-full border border-zinc-800 shadow-lg">
-                <div class="w-2 h-2 bg-green-500 rounded-full pulse-green"></div>
-                <span class="text-[10px] font-bold text-zinc-400 tracking-widest uppercase" data-i18n="liveFeed">Live Feed</span>
+                <div id="data-status-dot" class="w-2 h-2 bg-zinc-500 rounded-full"></div>
+                <span id="data-status-text" class="text-[10px] font-bold text-zinc-400 tracking-widest uppercase" data-i18n="liveFeed">Data Status</span>
             </div>
             <button onclick="openMembershipModal()" class="flex items-center justify-center gap-2 bg-[#18181b] border border-zinc-800 px-3 py-2 sm:py-1.5 rounded-full text-xs font-black text-zinc-300 hover:text-white hover:border-blue-500/50 transition-colors shadow-lg">
                 <i class="ph ph-user-circle text-sm"></i> <span id="member-status-text">Sign In</span>
@@ -334,6 +338,7 @@
         const OPENAI_SIGNAL_ENDPOINTS = ['/api/trading-signal'];
         const QUOTE_API_ENDPOINT = '/api/quote';
         const STOCK_DATA_ENDPOINT = '/api/stock-data';
+        const ASHARE_QUOTE_ENDPOINT = '/api/ashare-quote';
         const SEARCH_API_ENDPOINT = '/api/search';
         const NEWS_API_ENDPOINT = '/api/news';
         const COMPANY_NEWS_ENDPOINT = '/api/company-news';
@@ -352,7 +357,7 @@
                 cons: "Conservative", mod: "Moderate Core", agg: "Aggressive",
                 portStruct: "Structure", updates: "Auto-sync", netAsset: "AUM",
                 proj1y: "1Y Proj.", proj5y: "5Y Proj.", marketNews: "Live News",
-                liveFeed: "Live Feed", searchPlaceholder: "Ticker (AAPL, BHP.AX, 0700.HK...)",
+                liveFeed: "Data Status", searchPlaceholder: "Ticker (AAPL, BHP.AX, 0700.HK...)",
                 aiAnalysis: "AI Asset Analysis", impactedTickers: "Impacted Industries & Tickers",
                 marketInsight: "Market Insight", newsSummaryLabel: "AI Executive Summary",
                 aiTradingSignal: "AI Trading Analysis", confidence: "Confidence", aiSignalAnalysis: "AI Analysis",
@@ -373,7 +378,7 @@
                 cons: "保守固收", mod: "稳健核心", agg: "激进高弹性",
                 portStruct: "配置结构", updates: "实时网络同步", netAsset: "资管总额",
                 proj1y: "1年预期", proj5y: "5年复利预期", marketNews: "全球快讯",
-                liveFeed: "全球专线已连", searchPlaceholder: "输入代码 (如 AAPL, BHP.AX, 0700.HK)",
+                liveFeed: "数据状态", searchPlaceholder: "输入代码 (如 AAPL, BHP.AX, 0700.HK)",
                 aiAnalysis: "AI 多维标的分析", impactedTickers: "受影响行业与相关股票",
                 marketInsight: "市场洞察", newsSummaryLabel: "AI 深度摘要",
                 aiTradingSignal: "AI 交易分析", confidence: "信心指数", aiSignalAnalysis: "AI 分析",
@@ -577,6 +582,7 @@
             if (currentLang !== 'zh') currentMarketMode = 'global';
             syncMarketModeButtons();
             updateMemberStatus();
+            setDataStatus(document.body.dataset.dataStatus || 'idle', document.body.dataset.dataSource || '');
         }
         function toggleLang() { currentLang = currentLang === 'en' ? 'zh' : 'en'; renderLang(); renderAiPicks(); renderHotAssets(); renderAshareThemeRow(); updateDashboard(); }
 
@@ -684,6 +690,28 @@
             return LOCAL_API_BASE ? [endpoint, `${LOCAL_API_BASE}${endpoint}`] : [endpoint];
         }
 
+        function setDataStatus(status, source = '') {
+            const dot = document.getElementById('data-status-dot');
+            const text = document.getElementById('data-status-text');
+            if (!dot || !text) return;
+            document.body.dataset.dataStatus = status;
+            document.body.dataset.dataSource = source;
+            const labels = {
+                idle: currentLang === 'zh' ? '等待数据' : 'Waiting',
+                live: currentLang === 'zh' ? `实时数据${source ? ' · ' + source : ''}` : `Live${source ? ' · ' + source : ''}`,
+                partial: currentLang === 'zh' ? `备用数据${source ? ' · ' + source : ''}` : `Fallback${source ? ' · ' + source : ''}`,
+                error: currentLang === 'zh' ? '数据异常' : 'Data Error'
+            };
+            const classes = {
+                idle: 'w-2 h-2 bg-zinc-500 rounded-full',
+                live: 'w-2 h-2 bg-green-500 rounded-full pulse-green',
+                partial: 'w-2 h-2 bg-yellow-500 rounded-full pulse-yellow',
+                error: 'w-2 h-2 bg-red-500 rounded-full pulse-red'
+            };
+            dot.className = classes[status] || classes.idle;
+            text.textContent = labels[status] || labels.idle;
+        }
+
         async function fetchApiJson(endpoint, options) {
             for (const url of apiCandidates(endpoint)) {
                 try {
@@ -703,11 +731,21 @@
         async function fetchTwelveQuote(symbol) {
             try {
                 const data = await fetchApiJson(withQuery(QUOTE_API_ENDPOINT, { symbol }));
-                if (!data) return null;
+                if (!data) {
+                    setDataStatus('error');
+                    return null;
+                }
                 const price = Number(data.c);
                 const dp = data.dp !== undefined ? Number(data.dp) : 0;
-                return Number.isFinite(price) ? { c: price, dp: Number.isFinite(dp) ? dp : 0, source: data.source || 'Twelve Data' } : null;
+                if (!Number.isFinite(price)) {
+                    setDataStatus('error');
+                    return null;
+                }
+                const source = data.source || 'Twelve Data';
+                setDataStatus(source === 'Yahoo Finance' ? 'partial' : 'live', source);
+                return { c: price, dp: Number.isFinite(dp) ? dp : 0, source };
             } catch {
+                setDataStatus('error');
                 return null;
             }
         }
@@ -718,9 +756,15 @@
             try {
                 const data = await fetchApiJson(withQuery(STOCK_DATA_ENDPOINT, { symbol }));
                 if (!data) return null;
+                if (data.quoteAvailable) {
+                    setDataStatus(data.quoteSource === 'Yahoo Finance' ? 'partial' : 'live', data.quoteSource || '');
+                } else {
+                    setDataStatus('partial', currentLang === 'zh' ? '无实时报价' : 'No quote');
+                }
                 apiCache[symbol] = { time: Date.now(), data };
                 return data;
             } catch {
+                setDataStatus('error');
                 return null;
             }
         }
@@ -1449,7 +1493,9 @@
                     script.remove();
                     reject(new Error('jsonp failed'));
                 };
-                script.src = `${url}${sep}${cbParam}=${cb}`;
+                script.src = new RegExp(`([?&]${cbParam}=)[^&]*`).test(url)
+                    ? url.replace(new RegExp(`([?&]${cbParam}=)[^&]*`), `$1${cb}`)
+                    : `${url}${sep}${cbParam}=${cb}`;
                 document.body.appendChild(script);
             });
         }
@@ -1473,7 +1519,82 @@
             return `${clean}${/^6|^9/.test(clean) ? '.SS' : '.SZ'}`;
         }
 
-        async function fetchAshareQuote(symbol) {
+        function sinaAshareCode(symbol) {
+            const code = ashareCode(symbol);
+            if (!/^\d{6}$/.test(code)) return '';
+            return `${/^6|^9/.test(code) ? 'sh' : 'sz'}${code}`;
+        }
+
+        function fetchSinaRawQuote(symbol) {
+            return new Promise((resolve, reject) => {
+                const sinaCode = sinaAshareCode(symbol);
+                if (!sinaCode) {
+                    resolve(null);
+                    return;
+                }
+                const varName = `hq_str_${sinaCode}`;
+                const script = document.createElement('script');
+                script.charset = 'gbk';
+                const timer = setTimeout(() => {
+                    script.remove();
+                    reject(new Error('sina timeout'));
+                }, 6000);
+                script.onload = () => {
+                    clearTimeout(timer);
+                    const raw = window[varName] || '';
+                    try { delete window[varName]; } catch {}
+                    script.remove();
+                    resolve(raw);
+                };
+                script.onerror = () => {
+                    clearTimeout(timer);
+                    script.remove();
+                    reject(new Error('sina failed'));
+                };
+                script.src = `https://hq.sinajs.cn/list=${sinaCode}`;
+                document.body.appendChild(script);
+            });
+        }
+
+        async function fetchSinaAshareQuote(symbol) {
+            if (!isAshareSymbol(symbol)) return null;
+            const raw = await fetchSinaRawQuote(symbol);
+            if (!raw || !raw.includes(',')) return null;
+            const parts = raw.split(',');
+            const name = parts[0] || symbol;
+            const open = Number(parts[1]);
+            const prev = Number(parts[2]);
+            const price = Number(parts[3]);
+            const high = Number(parts[4]);
+            const low = Number(parts[5]);
+            const volume = Number(parts[8]);
+            const amount = Number(parts[9]);
+            if (!Number.isFinite(price) || price <= 0) return null;
+            const pct = Number.isFinite(prev) && prev > 0 ? ((price - prev) / prev) * 100 : 0;
+            return {
+                symbol: ashareSymbolFromCode(symbol),
+                name,
+                quote: {
+                    c: price,
+                    pc: Number.isFinite(prev) ? prev : null,
+                    dp: Number.isFinite(pct) ? pct : 0,
+                    open: Number.isFinite(open) ? open : null,
+                    high: Number.isFinite(high) ? high : null,
+                    low: Number.isFinite(low) ? low : null,
+                    volume: Number.isFinite(volume) ? volume : null,
+                    amount: Number.isFinite(amount) ? amount : null,
+                    t: Date.now()
+                },
+                profile: { name, ticker: ashareSymbolFromCode(symbol), country: 'China' },
+                fundamentals: {
+                    volume: Number.isFinite(volume) ? volume : null,
+                    amount: Number.isFinite(amount) ? amount : null
+                },
+                quoteSource: currentLang === 'zh' ? '新浪财经' : 'Sina Finance'
+            };
+        }
+
+        async function fetchEastmoneyAshareQuote(symbol) {
             if (!isAshareSymbol(symbol)) return null;
             const secid = ashareSecid(symbol);
             const fields = 'f43,f57,f58,f60,f116,f162,f167,f168,f170,f173';
@@ -1503,6 +1624,37 @@
                 },
                 quoteSource: currentLang === 'zh' ? '东方财富' : 'Eastmoney'
             };
+        }
+
+        async function fetchAshareQuote(symbol) {
+            if (!isAshareSymbol(symbol)) return null;
+            try {
+                const serverQuote = await fetchApiJson(withQuery(ASHARE_QUOTE_ENDPOINT, { symbol }));
+                if (serverQuote && serverQuote.quote) {
+                    const source = serverQuote.quoteSource === 'Sina Finance'
+                        ? (currentLang === 'zh' ? '新浪财经' : 'Sina Finance')
+                        : (currentLang === 'zh' ? '东方财富' : 'Eastmoney');
+                    const payload = { ...serverQuote, quoteSource: source };
+                    setDataStatus(serverQuote.quoteSource === 'Sina Finance' ? 'live' : 'partial', source);
+                    return payload;
+                }
+            } catch {}
+            try {
+                const sina = await fetchSinaAshareQuote(symbol);
+                if (sina) {
+                    setDataStatus('live', sina.quoteSource);
+                    return sina;
+                }
+            } catch {}
+            try {
+                const eastmoney = await fetchEastmoneyAshareQuote(symbol);
+                if (eastmoney) {
+                    setDataStatus('partial', eastmoney.quoteSource);
+                    return eastmoney;
+                }
+            } catch {}
+            setDataStatus('error');
+            return null;
         }
 
         async function loadAshareThemeHeat() {
@@ -2093,7 +2245,7 @@
             const symbol = ashareSymbolFromCode(q);
             try {
                 const info = await fetchAshareQuote(symbol);
-                return info ? [{ symbol: info.symbol || symbol, description: info.name || symbol, source: 'Eastmoney' }] : [{ symbol, description: 'A股股票' }];
+                return info ? [{ symbol: info.symbol || symbol, description: info.name || symbol, source: info.quoteSource || 'Sina Finance' }] : [{ symbol, description: 'A股股票' }];
             } catch {
                 return [{ symbol, description: 'A股股票' }];
             }
@@ -2179,6 +2331,9 @@
             body.innerHTML = `<div class="flex flex-col items-center py-10"><i class="ph ph-circle-notch animate-spin text-4xl text-blue-500 mb-4"></i><p class="text-xs font-bold text-zinc-500">${currentLang === 'zh' ? '正在打开标的资料...' : 'Opening asset profile...'}</p></div>`;
 
             let data = await fetchFullStockData(symbol);
+            if(!data && isAshareSymbol(symbol)) {
+                data = { quote: { c: null, dp: null }, quoteAvailable: false, sentiment: null, profile: { name, ticker: symbol, country: 'China' }, quoteSource: currentLang === 'zh' ? '等待A股行情' : 'Waiting for A-share quote' };
+            }
             if(!data) { body.innerHTML = `<p class="text-red-500 font-bold text-center">Data connection failed for ${symbol}</p>`; return; }
             if (isAshareSymbol(symbol)) {
                 try {
@@ -2240,7 +2395,7 @@
                 <div class="mb-5 ${isAshareSymbol(symbol) ? 'h-72' : 'h-24'} rounded-2xl border border-zinc-800 bg-[#09090b] p-3">
                     <div class="mb-2 flex items-center justify-between">
                         <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">${isAshareSymbol(symbol) ? (currentLang === 'zh' ? '日线图' : 'Daily Chart') : uiText.priceTrace}</p>
-                        <p class="text-[10px] ${isAshareSymbol(symbol) ? 'text-red-400' : 'text-zinc-500'} font-bold uppercase tracking-widest">${isAshareSymbol(symbol) ? (currentLang === 'zh' ? '东方财富' : 'Eastmoney') : (hasQuote ? data.quoteSource : uiText.noLiveQuote)}</p>
+                        <p class="text-[10px] ${isAshareSymbol(symbol) ? 'text-red-400' : 'text-zinc-500'} font-bold uppercase tracking-widest">${isAshareSymbol(symbol) ? (data.quoteSource || (currentLang === 'zh' ? '新浪财经' : 'Sina Finance')) : (hasQuote ? data.quoteSource : uiText.noLiveQuote)}</p>
                     </div>
                     <div class="${isAshareSymbol(symbol) ? 'h-60' : 'h-14'}"><canvas id="${isAshareSymbol(symbol) ? 'a-share-main-kline-canvas' : 'stock-price-chart'}"></canvas></div>
                 </div>
@@ -3047,6 +3202,7 @@
         document.getElementById('ai-allocation-btn').onclick = generateAIAllocation;
         // 初始化逻辑
         renderLang(); 
+        setDataStatus('idle');
         renderAiPicks();
         updateDashboard();
         fetchMarketNews(); 
