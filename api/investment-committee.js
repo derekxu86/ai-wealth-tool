@@ -24,7 +24,8 @@ Price/change: ${body.price || ''} / ${body.changePercent || ''}
 Public metrics: ${JSON.stringify(body.fundamentals || {})}
 News: ${(body.news || []).map(n => n.title || n.headline || '').filter(Boolean).join(' | ')}
 Reports: ${(body.reports || []).map(r => [r.org, r.rating, r.title].filter(Boolean).join(' ')).filter(Boolean).join(' | ')}
-Produce a compact committee report with concrete catalysts, risks, valuation/earnings implications, and validation checkpoints.`,
+Produce a compact committee report with concrete catalysts, risks, valuation/earnings implications, and validation checkpoints.
+Score must be a 0-100 conviction score, not 0-1 and not 0-10. Use 50-65 for neutral, 66-75 for constructive, 76-90 for high conviction, and below 50 only when risks clearly dominate.`,
       schema: {
         type: 'object',
         additionalProperties: false,

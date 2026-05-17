@@ -34,7 +34,7 @@ Prefer individual companies when the opportunity is stock-specific; use ETFs onl
 Use current market conditions to balance growth and downside protection.`;
 
     const marketInstruction = marketMode === 'ashare'
-      ? 'Market mode is China A-shares. Every investable ticker must be an A-share or China onshore ETF ending in .SS or .SZ. Do not return US, HK, ASX, crypto, or global ETF tickers in allocations. Do not make every holding an ETF; each growth or thematic sleeve should include individual A-share companies when appropriate.'
+      ? 'Market mode is China A-shares. Every investable ticker must be an A-share or China onshore ETF ending in .SS or .SZ. Do not return US, HK, ASX, crypto, or global ETF tickers in allocations. Do not make every holding an ETF; each growth or thematic sleeve should include individual A-share companies when appropriate. Do not default to PetroChina, Sinopec, CNOOC, traditional banks, or coal leaders unless the selected profile is conservative or the user explicitly asks for dividends, oil, coal, SOE cashflow, or defensive income. For moderate/aggressive profiles, prefer current high-quality A-share opportunities in AI infrastructure, semiconductors, advanced manufacturing, robotics, healthcare, consumer leaders, renewable energy, and export champions, while keeping risk controls.'
       : 'Market mode is global. You may use global ETFs and listed equities, but do not force Australia/ASX exposure unless the user explicitly asks for it. Do not make every holding an ETF; each growth or thematic sleeve should include individual companies when appropriate.';
 
     const payload = await callOpenAIJson({
